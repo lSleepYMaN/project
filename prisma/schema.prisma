@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model bounding_box {
+  idbounding_box     Int             @id @default(autoincrement())
+  x1                 Float?          @db.Float
+  y1                 Float?          @db.Float
+  x2                 Float?          @db.Float
+  y2                 Float?          @db.Float
+  created_at         DateTime?       @db.DateTime(0)
+  updated_at         DateTime?       @db.DateTime(0)
+  iddetection        Int
+  detection_class_id Int
+  user_id            Int
+  detection          detection       @relation(fields: [iddetection], references: [iddetection], onDelete: NoAction, onUpdate: NoAction, map: "fk_bounding_box_detection1")
+  detection_class    detection_class @relation(fields: [detection_class_id], references: [class_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_bounding_box_detection_class1")
+  user               user            @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_bounding_box_user1")
+
+  @@index([iddetection], map: "fk_bounding_box_detection1_idx")
+  @@index([detection_class_id], map: "fk_bounding_box_detection_class1_idx")
+  @@index([user_id], map: "fk_bounding_box_user1_idx")
+}
+
+model classification {
+  idclassification        Int                  @id @default(autoincrement())
+  image_path              String?              @db.VarChar(100)
+  image_name              String?              @db.VarChar(45)
+  created_at              DateTime?            @db.DateTime(0)
+  updated_at              DateTime?            @db.DateTime(0)
+  idproject               Int
+  classification_class_id Int
+  classification_class    classification_class @relation(fields: [classification_class_id], references: [class_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_classification_classification_class1")
+  project                 project              @relation(fields: [idproject], references: [idproject], onDelete: NoAction, onUpdate: NoAction, map: "fk_classification_project1")
+
+  @@index([classification_class_id], map: "fk_classification_classification_class1_idx")
+  @@index([idproject], map: "fk_classification_project1_idx")
+}
+
+model classification_class {
+  class_id       Int              @id @default(autoincrement())
+  class_label    String           @db.VarChar(45)
+  created_at     DateTime?        @db.DateTime(0)
+  updated_at     DateTime?        @db.DateTime(0)
+  idproject      Int
+  classification classification[]
+  project        project          @relation(fields: [idproject], references: [idproject], onDelete: NoAction, onUpdate: NoAction, map: "fk_classification_class_project1")
+
+  @@index([idproject], map: "fk_classification_class_project1_idx")
+}
+
+model detection {
+  iddetection  Int            @id @default(autoincrement())
+  image_path   String?        @db.VarChar(100)
+  height_image Float?         @db.Float
+  width_image  Float?         @db.Float
+  created_at   DateTime?      @db.DateTime(0)
+  updated_at   DateTime?      @db.DateTime(0)
+  idproject    Int
+  bounding_box bounding_box[]
+  project      project        @relation(fields: [idproject], references: [idproject], onDelete: NoAction, onUpdate: NoAction, map: "fk_detection_project1")
+
+  @@index([idproject], map: "fk_detection_project1_idx")
+}
+
+model detection_class {
+  class_id     Int            @id @default(autoincrement())
+  class_label  String         @db.VarChar(45)
+  create_at    DateTime?      @db.DateTime(0)
+  updated_at   DateTime?      @db.DateTime(0)
+  idproject    Int
+  bounding_box bounding_box[]
+  project      project        @relation(fields: [idproject], references: [idproject], onDelete: NoAction, onUpdate: NoAction, map: "fk_detection_class_project1")
+
+  @@index([idproject], map: "fk_detection_class_project1_idx")
+}
+
+model district {
+  iddistrict    Int            @id @default(autoincrement())
+  district_name String?        @db.VarChar(100)
+  created_at    DateTime?      @db.DateTime(0)
+  updated_at    DateTime?      @db.DateTime(0)
+  idprovinces   Int
+  provinces     provinces      @relation(fields: [idprovinces], references: [idprovinces], onDelete: NoAction, onUpdate: NoAction, map: "fk_district_provinces")
+  sub_district  sub_district[]
+
+  @@index([idprovinces], map: "fk_district_provinces_idx")
+}
+
+model polygon {
+  idpolygon             Int                @id @default(autoincrement())
+  xy_polygon            String?            @db.VarChar(500)
+  created_at            DateTime?          @db.DateTime(0)
+  updated_at            DateTime?          @db.DateTime(0)
+  user_id               Int
+  idsegmentation        Int
+  segmentation_class_id Int
+  segmentation          segmentation       @relation(fields: [idsegmentation], references: [idsegmentation], onDelete: NoAction, onUpdate: NoAction, map: "fk_polygon_segmentation1")
+  segmentation_class    segmentation_class @relation(fields: [segmentation_class_id], references: [class_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_polygon_segmentation_class1")
+  user                  user               @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_polygon_user1")
+
+  @@index([idsegmentation], map: "fk_polygon_segmentation1_idx")
+  @@index([segmentation_class_id], map: "fk_polygon_segmentation_class1_idx")
+  @@index([user_id], map: "fk_polygon_user1_idx")
+}
+
+model project {
+  idproject            Int                    @id @default(autoincrement())
+  project_name         String                 @db.VarChar(100)
+  description          String                 @db.VarChar(100)
+  root_path            String?                @db.VarChar(100)
+  created_at           DateTime?              @db.DateTime(0)
+  updated_at           DateTime?              @db.DateTime(0)
+  classification       classification[]
+  classification_class classification_class[]
+  detection            detection[]
+  detection_class      detection_class[]
+  segmentation         segmentation[]
+  segmentation_class   segmentation_class[]
+  user_in_charge       user_in_charge[]
+}
+
+model provinces {
+  idprovinces   Int        @id @default(autoincrement())
+  province_name String?    @db.VarChar(100)
+  created_at    DateTime?  @db.DateTime(0)
+  updated_at    DateTime?  @db.DateTime(0)
+  district      district[]
+}
+
+model segmentation {
+  idsegmentation Int       @id @default(autoincrement())
+  image_path     String?   @db.VarChar(100)
+  height_image   Float?    @db.Float
+  width_image    Float?    @db.Float
+  created_at     DateTime? @db.DateTime(0)
+  updated_at     DateTime? @db.DateTime(0)
+  idproject      Int
+  polygon        polygon[]
+  project        project   @relation(fields: [idproject], references: [idproject], onDelete: NoAction, onUpdate: NoAction, map: "fk_segmentation_project1")
+
+  @@index([idproject], map: "fk_segmentation_project1_idx")
+}
+
+model segmentation_class {
+  class_id    Int       @id @default(autoincrement())
+  class_label String    @db.VarChar(45)
+  created_at  DateTime? @db.DateTime(0)
+  update_at   DateTime? @db.DateTime(0)
+  idproject   Int
+  polygon     polygon[]
+  project     project   @relation(fields: [idproject], references: [idproject], onDelete: NoAction, onUpdate: NoAction, map: "fk_segmentation_class_project1")
+
+  @@index([idproject], map: "fk_segmentation_class_project1_idx")
+}
+
+model sub_district {
+  idsub_district    Int       @id @default(autoincrement()) @map("idsub-district")
+  sub_district_name String?   @map("sub-district_name") @db.VarChar(100)
+  created_at        DateTime? @db.DateTime(0)
+  updated_at        DateTime? @db.DateTime(0)
+  iddistrict        Int
+  district          district  @relation(fields: [iddistrict], references: [iddistrict], onDelete: NoAction, onUpdate: NoAction, map: "fk_sub-district_district1")
+  user              user[]
+
+  @@index([iddistrict], map: "fk_sub-district_district1_idx")
+  @@map("sub-district")
+}
+
+model user {
+  id             Int              @id @default(autoincrement())
+  username       String           @unique(map: "username_UNIQUE") @db.VarChar(45)
+  email          String           @unique(map: "email_UNIQUE") @db.VarChar(100)
+  password       String           @db.VarChar(100)
+  status         Int              @default(0)
+  home_number    String?          @db.VarChar(10)
+  road           String?          @db.VarChar(50)
+  alley          String?          @db.VarChar(50)
+  postcode       String?          @db.VarChar(10)
+  created_at     DateTime?        @db.DateTime(0)
+  updated_at     DateTime?        @db.DateTime(0)
+  verified_code  String?          @db.VarChar(45)
+  idsub_district Int?             @map("idsub-district")
+  bounding_box   bounding_box[]
+  polygon        polygon[]
+  sub_district   sub_district?    @relation(fields: [idsub_district], references: [idsub_district], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_sub-district1")
+  user_in_charge user_in_charge[]
+
+  @@index([idsub_district], map: "fk_user_sub-district1_idx")
+}
+
+model user_in_charge {
+  has_allow Int
+  idproject Int
+  user_id   Int
+  id        Int     @id @default(autoincrement())
+  project   project @relation(fields: [idproject], references: [idproject], onDelete: NoAction, onUpdate: NoAction, map: "fk_project_has_user_project1")
+  user      user    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_project_has_user_user1")
+
+  @@index([idproject], map: "fk_project_has_user_project1_idx")
+  @@index([user_id], map: "fk_project_has_user_user1_idx")
+}
