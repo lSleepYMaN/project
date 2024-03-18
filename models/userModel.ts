@@ -77,12 +77,3 @@ export const getEmail = async (email: string) => {
         throw error
     }
 }
-
-export const getPassword = async (password: string) => {
-    try {
-        
-    } catch (error) {
-        console.log("Get password ERROR!! ")
-        throw error
-    }
-}

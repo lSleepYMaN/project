@@ -46,7 +46,7 @@ export const registerUser = async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'Email ถูกใช้งานแล้ว' })
         }
 
-        const hashedPassword = await bcrypt.hash(password,10)
+        const hashedPassword = md5(password)
 
         const newUser = await userModel.createUser(username, email, hashedPassword)
 
@@ -76,20 +76,19 @@ export const loginUser = async (req: Request, res: Response) => {
             })
         }
 
-        const isMatch = bcrypt.compare(password,findUser.password)
+        const hashedPassword = md5(password)
 
-        if (!isMatch) {
-            return res.status(400).json({
-                type: 'Error!!',
-                message: 'Password ไม่ถูกต้อง',
-            })
-        } else {
-            
+        if (hashedPassword === findUser.password) {
             await userModel.updateTimeUser(username)
             return res.status(400).json({
                 type: 'Success!!',
                 message: 'Login สำเร็จ',
                 redirectTo: '/allUsers'
+            })
+        } else {
+            return res.status(400).json({
+                type: 'Error!!',
+                message: 'Password ไม่ถูกต้อง',
             })
         }
 
