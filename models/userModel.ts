@@ -24,7 +24,7 @@ export const userById = async (id: number) => {
     }
 } 
 
-export const createUser = async (username: string, email: string, password: string) => {
+export const createUser = async (username: string, email: string, password: string, code: string) => {
     try {
         return await prisma.user.create({
             data: {
@@ -33,6 +33,7 @@ export const createUser = async (username: string, email: string, password: stri
                 password,
                 created_at: new Date(),
                 updated_at: new Date(),
+                verified_code: code
             }
         })
         

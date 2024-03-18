@@ -2,6 +2,7 @@ import { Request, Response } from "express"
 import * as userModel from '../models/userModel'
 import md5 from 'md5'
 import bcrypt from 'bcryptjs'
+import * as sendEmail from '../utils/sendEmail'
 
 export const getAllUsers = async (req: Request, res: Response) => {
     try {
@@ -50,9 +51,12 @@ export const registerUser = async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'Password ไม่ตรงกัน' })
         }
 
+        const code = sendEmail.genCode()
+        await sendEmail.sendMail(email,code)
+
         const hashedPassword = md5(password)
 
-        const newUser = await userModel.createUser(username, email, hashedPassword)
+        const newUser = await userModel.createUser(username, email, hashedPassword, code)
 
         return res.status(200).json({
             type: 'Success!!',
