@@ -26,7 +26,7 @@ export const getUserById = async (req: Request, res: Response) => {
 }
 
 export const registerUser = async (req: Request, res: Response) => {
-    const { username, email, password } = req.body
+    const { username, email, password, comPassword } = req.body
     const validUsername = /^[a-zA-Z0-9_]{8,}$/.test(username)
     
     if(!validUsername){
@@ -44,6 +44,10 @@ export const registerUser = async (req: Request, res: Response) => {
 
         if (checkEmail) {
             return res.status(400).json({ error: 'Email ถูกใช้งานแล้ว' })
+        }
+
+        if (comPassword != password){
+            return res.status(400).json({ error: 'Password ไม่ตรงกัน' })
         }
 
         const hashedPassword = md5(password)
