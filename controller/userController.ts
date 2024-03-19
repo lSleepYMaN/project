@@ -1,6 +1,5 @@
 import { Request, Response } from "express"
 import * as userModel from '../models/userModel'
-import md5 from 'md5'
 import bcrypt from 'bcryptjs'
 import * as sendEmail from '../utils/sendEmail'
 
@@ -54,7 +53,7 @@ export const registerUser = async (req: Request, res: Response) => {
         const code = sendEmail.genCode()
         await sendEmail.sendMail(email,code)
 
-        const hashedPassword = md5(password)
+        const hashedPassword = await bcrypt.hash(password, 10)
 
         const newUser = await userModel.createUser(username, email, hashedPassword, code)
 
@@ -84,21 +83,35 @@ export const loginUser = async (req: Request, res: Response) => {
             })
         }
 
-        const hashedPassword = md5(password)
+       const compare = await bcrypt.compare(password, findUser.password)
 
-        if (hashedPassword === findUser.password) {
-            await userModel.updateTimeUser(username)
-            return res.status(400).json({
-                type: 'Success!!',
-                message: 'Login สำเร็จ',
-                redirectTo: '/allUsers'
-            })
-        } else {
+        if (!compare) {
             return res.status(400).json({
                 type: 'Error!!',
                 message: 'Password ไม่ถูกต้อง',
+             })
+        } else {
+            await userModel.updateTimeUser(username)
+                return res.status(400).json({
+                    type: 'Success!!',
+                    message: 'Login สำเร็จ',
+                    redirectTo: '/allUsers'
             })
         }
+
+        // if (hashedPassword === findUser.password) {
+        //     await userModel.updateTimeUser(username)
+        //     return res.status(400).json({
+        //         type: 'Success!!',
+        //         message: 'Login สำเร็จ',
+        //         redirectTo: '/allUsers'
+        //     })
+        // } else {
+        //     return res.status(400).json({
+        //         type: 'Error!!',
+        //         message: 'Password ไม่ถูกต้อง',
+        //     })
+        // }
 
 
     } catch (error) {
