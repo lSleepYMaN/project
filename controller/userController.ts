@@ -2,6 +2,8 @@ import { Request, Response } from "express"
 import * as userModel from '../models/userModel'
 import bcrypt from 'bcryptjs'
 import * as sendEmail from '../utils/sendEmail'
+import jwt, { verify } from 'jsonwebtoken'
+import dotenv from 'dotenv'
 
 export const getAllUsers = async (req: Request, res: Response) => {
     try {
@@ -57,16 +59,53 @@ export const registerUser = async (req: Request, res: Response) => {
 
         const newUser = await userModel.createUser(username, email, hashedPassword, code)
 
+        const token = jwt.sign(
+            { id: newUser.id, username}, "test123", { expiresIn: "2h" }
+        )
+
         return res.status(200).json({
             type: 'Success!!',
             message: 'ลงทะเบียนสำเร็จ',
-            redirectTo: '/reg-log/sregister',
-            user: newUser,
+            redirectTo: '/verifyUser',
+            user_data: token,
         })
 
     } catch (error) {
         console.error('Registration error:', error);
         return res.status(500).json({ error: 'Registration failed' })
+    }
+}
+
+export const verifyUser = async (req: Request, res: Response) => {
+    const token = req.headers['authorization']
+    const { verifiedCode } = req.body
+    let authToken = ''
+    
+    if (token) {
+        authToken = token.split(' ')[1]
+    }
+
+    const user = jwt.verify(authToken, 'test123') as {username: string}
+    const verified = await userModel.updateStatusUser(user.username,verifiedCode)
+
+    try {
+        if (!verified) {
+            return res.status(400).json({
+                type: 'Error!!',
+                message: 'รหัสยืนยันไม่ถูกต้อง',
+            })
+        } else {
+            return res.status(200).json({
+                type: 'Success!!',
+                message: 'Update สำเร็จ',
+                redirectTo: '/login',
+            })
+        }
+    
+        
+    } catch (error) {
+        console.error('Verify user ERROR!!!', error)
+        return res.status(500).json({ error: 'Verify user ERROR!!!' })
     }
 }
 
@@ -92,27 +131,17 @@ export const loginUser = async (req: Request, res: Response) => {
              })
         } else {
             await userModel.updateTimeUser(username)
-                return res.status(400).json({
-                    type: 'Success!!',
-                    message: 'Login สำเร็จ',
-                    redirectTo: '/allUsers'
+            const token = jwt.sign(
+                { id: findUser.id, username}, "test123", { expiresIn: "72h" }
+            )
+    
+            return res.status(200).json({
+                type: 'Success!!',
+                message: 'เข้าสู่ระบบสำเร็จ',
+                redirectTo: '/webpage',
+                user_data: token,
             })
         }
-
-        // if (hashedPassword === findUser.password) {
-        //     await userModel.updateTimeUser(username)
-        //     return res.status(400).json({
-        //         type: 'Success!!',
-        //         message: 'Login สำเร็จ',
-        //         redirectTo: '/allUsers'
-        //     })
-        // } else {
-        //     return res.status(400).json({
-        //         type: 'Error!!',
-        //         message: 'Password ไม่ถูกต้อง',
-        //     })
-        // }
-
 
     } catch (error) {
         console.error('Login error:', error);
