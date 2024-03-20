@@ -177,7 +177,7 @@ model user {
   username       String           @unique(map: "username_UNIQUE") @db.VarChar(45)
   email          String           @unique(map: "email_UNIQUE") @db.VarChar(100)
   password       String           @db.VarChar(100)
-  status         Int              @default(0)
+  status         Int              @default(-1)
   home_number    String?          @db.VarChar(10)
   road           String?          @db.VarChar(50)
   alley          String?          @db.VarChar(50)

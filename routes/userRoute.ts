@@ -8,5 +8,6 @@ router.get('/user/:id', userController.getUserById)
 router.post('/register', userController.registerUser)
 router.post('/login', userController.loginUser)
 router.post('/verify',userController.verifyUser)
+router.post('/logout',userController.logoutUser)
 
 export default router

@@ -3,7 +3,6 @@ import * as userModel from '../models/userModel'
 import bcrypt from 'bcryptjs'
 import * as sendEmail from '../utils/sendEmail'
 import jwt, { verify } from 'jsonwebtoken'
-import dotenv from 'dotenv'
 
 export const getAllUsers = async (req: Request, res: Response) => {
     try {
@@ -30,9 +29,14 @@ export const getUserById = async (req: Request, res: Response) => {
 export const registerUser = async (req: Request, res: Response) => {
     const { username, email, password, comPassword } = req.body
     const validUsername = /^[a-zA-Z0-9_]{8,}$/.test(username)
+    const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
     
     if(!validUsername){
         return res.status(400).json({ error: 'Username ไม่ตรงตามเงื่อนไข'})
+    }
+
+    if (!validEmail) {
+        return res.status(400).json({ error: 'Email ไม่ถูกต้อง'})
     }
 
     try {
@@ -80,21 +84,20 @@ export const verifyUser = async (req: Request, res: Response) => {
     const token = req.headers['authorization']
     const { verifiedCode } = req.body
     let authToken = ''
-    
     if (token) {
         authToken = token.split(' ')[1]
     }
-
     const user = jwt.verify(authToken, 'test123') as {username: string}
-    const verified = await userModel.updateStatusUser(user.username,verifiedCode)
-
+    const verified = await userModel.getUsername(user.username)
     try {
-        if (!verified) {
+        if (verified?.verified_code != verifiedCode) {
             return res.status(400).json({
                 type: 'Error!!',
                 message: 'รหัสยืนยันไม่ถูกต้อง',
             })
         } else {
+            await userModel.updateVerifyCode(user.username)
+            await userModel.updateStatusTo0(user.username)
             return res.status(200).json({
                 type: 'Success!!',
                 message: 'Update สำเร็จ',
@@ -131,10 +134,12 @@ export const loginUser = async (req: Request, res: Response) => {
              })
         } else {
             await userModel.updateTimeUser(username)
+            await userModel.updateStatusTo1(username)
+
             const token = jwt.sign(
                 { id: findUser.id, username}, "test123", { expiresIn: "72h" }
             )
-    
+            
             return res.status(200).json({
                 type: 'Success!!',
                 message: 'เข้าสู่ระบบสำเร็จ',
@@ -144,8 +149,31 @@ export const loginUser = async (req: Request, res: Response) => {
         }
 
     } catch (error) {
-        console.error('Login error:', error);
+        console.error('Login error: ', error);
         return res.status(500).json({ error: 'Login failed' })
     }
 
+}
+
+export const logoutUser = async (req: Request, res: Response) => {
+    try {
+        const token = req.headers['authorization']
+        let authToken = ''
+    
+        if (token) {
+            authToken = token.split(' ')[1]
+        }
+        const user = jwt.verify(authToken, 'test123') as {username: string}
+        await userModel.updateStatusTo0(user.username)
+        return res.status(200).json({
+            type: 'Success!!',
+            message: 'ออกจากระบบสำเร็จ',
+            redirectTo: '/login',
+            user_data: authToken,
+        })
+        
+    } catch (error) {
+        console.error('Logout error: ', error)
+        return res.status(500).json({ error: 'Logout failed' })
+    }
 }

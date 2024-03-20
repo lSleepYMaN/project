@@ -56,22 +56,43 @@ export const updateTimeUser = async (username: string) => {
     }
 }
 
-export const updateStatusUser = async (username: string, verified_code: string) => {
+export const updateStatusTo0 = async (username: string) => {
     try {
-        const find = await prisma.user.findUnique({
-            where: { username, verified_code },
+        return await prisma.user.update({
+            where: { username },
+            data: { status: 0}
         })
-        if (find) {
-            await prisma.user.update({
-                where: { username },
-                data: { status: 1, verified_code: null}
-            })
-            return true
-        } else {
-            return false
-        }
+
+    
     } catch (error) {
         console.log("Update status ERROR!!")
+        throw error
+    }
+}
+
+export const updateStatusTo1 = async (username: string) => {
+    try {
+        return await prisma.user.update({
+            where: { username },
+            data: { status: 1}
+        })
+
+    
+    } catch (error) {
+        console.log("Update status ERROR!!")
+        throw error
+    }
+}
+
+export const updateVerifyCode = async (username: string) => {
+    try {
+        return await prisma.user.update({
+            where: { username },
+            data: { verified_code: null }
+        })
+        
+    } catch (error) {
+        console.log("Update verify ERROR!!")
         throw error
     }
 }
