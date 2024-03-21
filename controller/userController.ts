@@ -3,6 +3,7 @@ import * as userModel from '../models/userModel'
 import bcrypt from 'bcryptjs'
 import * as sendEmail from '../utils/sendEmail'
 import jwt, { verify } from 'jsonwebtoken'
+import cookie from 'cookie-parser'
 
 export const getAllUsers = async (req: Request, res: Response) => {
     try {
@@ -30,6 +31,7 @@ export const registerUser = async (req: Request, res: Response) => {
     const { username, email, password, comPassword } = req.body
     const validUsername = /^[a-zA-Z0-9_]{8,}$/.test(username)
     const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    const validPass = /^.{8,}$/.test(password)
     
     if(!validUsername){
         return res.status(400).json({ error: 'Username ไม่ตรงตามเงื่อนไข'})
@@ -37,6 +39,10 @@ export const registerUser = async (req: Request, res: Response) => {
 
     if (!validEmail) {
         return res.status(400).json({ error: 'Email ไม่ถูกต้อง'})
+    }
+
+    if (!validPass) {
+        return res.status(400).json({ error: 'Password ไม่ตรงตามเงื่อนไข'})
     }
 
     try {
@@ -66,12 +72,16 @@ export const registerUser = async (req: Request, res: Response) => {
         const token = jwt.sign(
             { id: newUser.id, username}, "test123", { expiresIn: "2h" }
         )
-
+        res.cookie('token', token, {
+            maxAge: 3600000*2,
+            secure: true,
+            httpOnly: true,
+            sameSite: "none"
+        })
         return res.status(200).json({
             type: 'Success!!',
             message: 'ลงทะเบียนสำเร็จ',
             redirectTo: '/verifyUser',
-            user_data: token,
         })
 
     } catch (error) {
@@ -81,12 +91,8 @@ export const registerUser = async (req: Request, res: Response) => {
 }
 
 export const verifyUser = async (req: Request, res: Response) => {
-    const token = req.headers['authorization']
+    const authToken = req.cookies.token
     const { verifiedCode } = req.body
-    let authToken = ''
-    if (token) {
-        authToken = token.split(' ')[1]
-    }
     const user = jwt.verify(authToken, 'test123') as {username: string}
     const verified = await userModel.getUsername(user.username)
     try {
@@ -98,6 +104,7 @@ export const verifyUser = async (req: Request, res: Response) => {
         } else {
             await userModel.updateVerifyCode(user.username)
             await userModel.updateStatusTo0(user.username)
+            res.clearCookie("token")
             return res.status(200).json({
                 type: 'Success!!',
                 message: 'Update สำเร็จ',
@@ -139,12 +146,16 @@ export const loginUser = async (req: Request, res: Response) => {
             const token = jwt.sign(
                 { id: findUser.id, username}, "test123", { expiresIn: "72h" }
             )
-            
+            res.cookie('login_token', token, {
+                maxAge: 3600000*72,
+                secure: true,
+                httpOnly: true,
+                sameSite: "none"
+            })
             return res.status(200).json({
                 type: 'Success!!',
                 message: 'เข้าสู่ระบบสำเร็จ',
                 redirectTo: '/webpage',
-                user_data: token,
             })
         }
 
@@ -157,14 +168,10 @@ export const loginUser = async (req: Request, res: Response) => {
 
 export const logoutUser = async (req: Request, res: Response) => {
     try {
-        const token = req.headers['authorization']
-        let authToken = ''
-    
-        if (token) {
-            authToken = token.split(' ')[1]
-        }
+        const authToken = req.cookies.login_token
         const user = jwt.verify(authToken, 'test123') as {username: string}
         await userModel.updateStatusTo0(user.username)
+        res.clearCookie("token")
         return res.status(200).json({
             type: 'Success!!',
             message: 'ออกจากระบบสำเร็จ',
