@@ -56,10 +56,10 @@ export const updateTimeUser = async (username: string) => {
     }
 }
 
-export const updateStatusTo0 = async (username: string) => {
+export const updateStatusTo0 = async (id: any) => {
     try {
         return await prisma.user.update({
-            where: { username },
+            where: { id },
             data: { status: 0}
         })
 
@@ -84,10 +84,10 @@ export const updateStatusTo1 = async (username: string) => {
     }
 }
 
-export const updateVerifyCode = async (username: string) => {
+export const updateVerifyCode = async (id: any) => {
     try {
         return await prisma.user.update({
-            where: { username },
+            where: { id },
             data: { verified_code: null }
         })
         

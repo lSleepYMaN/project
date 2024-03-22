@@ -5,6 +5,12 @@ import session from 'express-session'
 import cookie from 'cookie-parser'
 const app = express()
 
+app.use(session({
+  secret: '123456789',
+  resave: false,
+  saveUninitialized: true
+}));
+
 app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))

@@ -2,14 +2,11 @@ import { Request, Response } from "express"
 import * as userModel from '../models/userModel'
 import bcrypt from 'bcryptjs'
 import * as sendEmail from '../utils/sendEmail'
-import jwt, { verify } from 'jsonwebtoken'
-import cookie from 'cookie-parser'
 
 export const getAllUsers = async (req: Request, res: Response) => {
     try {
         const users = await userModel.allUser()
         res.json(users)
-        
     } catch (error) {
         console.error('error:', error);
         return res.status(500).json({ error: 'failed' })
@@ -63,21 +60,14 @@ export const registerUser = async (req: Request, res: Response) => {
         }
 
         const code = sendEmail.genCode()
-        await sendEmail.sendMail(email,code)
+        //await sendEmail.sendMail(email,code)
 
         const hashedPassword = await bcrypt.hash(password, 10)
 
         const newUser = await userModel.createUser(username, email, hashedPassword, code)
-
-        const token = jwt.sign(
-            { id: newUser.id, username}, "test123", { expiresIn: "2h" }
-        )
-        res.cookie('token', token, {
-            maxAge: 3600000*2,
-            secure: true,
-            httpOnly: true,
-            sameSite: "none"
-        })
+        req.session.userid = newUser.id
+        req.session.code = newUser.verified_code
+        
         return res.status(200).json({
             type: 'Success!!',
             message: 'ลงทะเบียนสำเร็จ',
@@ -91,25 +81,24 @@ export const registerUser = async (req: Request, res: Response) => {
 }
 
 export const verifyUser = async (req: Request, res: Response) => {
-    const authToken = req.cookies.token
     const { verifiedCode } = req.body
-    const user = jwt.verify(authToken, 'test123') as {username: string}
-    const verified = await userModel.getUsername(user.username)
     try {
-        if (verified?.verified_code != verifiedCode) {
+        if (req.session.code != verifiedCode) {
             return res.status(400).json({
                 type: 'Error!!',
                 message: 'รหัสยืนยันไม่ถูกต้อง',
             })
         } else {
-            await userModel.updateVerifyCode(user.username)
-            await userModel.updateStatusTo0(user.username)
-            res.clearCookie("token")
-            return res.status(200).json({
-                type: 'Success!!',
-                message: 'Update สำเร็จ',
-                redirectTo: '/login',
+            await userModel.updateVerifyCode(req.session.userid)
+            await userModel.updateStatusTo0(req.session.userid)
+            req.session.destroy(() => {
+                return res.status(200).json({
+                    type: 'Success!!',
+                    message: 'Update สำเร็จ',
+                    redirectTo: '/login',
+                }) 
             })
+            
         }
     
         
@@ -143,19 +132,13 @@ export const loginUser = async (req: Request, res: Response) => {
             await userModel.updateTimeUser(username)
             await userModel.updateStatusTo1(username)
 
-            const token = jwt.sign(
-                { id: findUser.id, username}, "test123", { expiresIn: "72h" }
-            )
-            res.cookie('login_token', token, {
-                maxAge: 3600000*72,
-                secure: true,
-                httpOnly: true,
-                sameSite: "none"
-            })
+            req.session.userid = findUser.id
+            
             return res.status(200).json({
                 type: 'Success!!',
                 message: 'เข้าสู่ระบบสำเร็จ',
                 redirectTo: '/webpage',
+                data: req.session.userid,
             })
         }
 
@@ -168,15 +151,14 @@ export const loginUser = async (req: Request, res: Response) => {
 
 export const logoutUser = async (req: Request, res: Response) => {
     try {
-        const authToken = req.cookies.login_token
-        const user = jwt.verify(authToken, 'test123') as {username: string}
-        await userModel.updateStatusTo0(user.username)
-        res.clearCookie("token")
-        return res.status(200).json({
-            type: 'Success!!',
-            message: 'ออกจากระบบสำเร็จ',
-            redirectTo: '/login',
-            user_data: authToken,
+        
+        await userModel.updateStatusTo0(req.session.userid)
+        req.session.destroy(() => {
+            return res.status(200).json({
+                type: 'Success!!',
+                message: 'ออกจากระบบสำเร็จ',
+                redirectTo: '/login',
+            }) 
         })
         
     } catch (error) {
@@ -184,3 +166,45 @@ export const logoutUser = async (req: Request, res: Response) => {
         return res.status(500).json({ error: 'Logout failed' })
     }
 }
+/*
+export const testUser = async (req: Request, res: Response) => {
+    try {
+        res.send('Test !!!<br>' + req.session.userid + '<br><br>' + req.session.username + '<br>')
+        
+    } catch (error) {
+        console.error('Logout error: ', error)
+        return res.status(500).json({ error: 'Logout failed' })
+    }
+}
+
+export const setUser = async (req: Request, res: Response) => {
+    try {
+        req.session.userid = 20
+        req.session.username = "good"
+        res.send('SETUSER!!!')
+        console.log(req.session.userid)
+        
+    } catch (error) {
+        console.error('Logout error: ', error)
+        return res.status(500).json({ error: 'Logout failed' })
+    }
+}
+
+export const delUser = async (req: Request, res: Response) => {
+    try {
+        res.send('delete')
+        req.session.destroy((err) => {
+            if (err) {
+                console.error('Error destroying session:', err);
+                res.status(500).send('Error destroying session');
+            } else {
+                res.send('Session cookie destroyed');
+            }
+        });
+        console.log(req.session.userid)
+        
+    } catch (error) {
+        console.error('Logout error: ', error)
+        return res.status(500).json({ error: 'Logout failed' })
+    }
+}*/

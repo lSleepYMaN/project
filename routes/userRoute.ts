@@ -1,6 +1,5 @@
-import express from 'express'
+import express, { Request, Response } from 'express';
 import * as userController from '../controller/userController'
-
 const router = express.Router()
 
 router.get('/users', userController.getAllUsers)
@@ -9,5 +8,6 @@ router.post('/register', userController.registerUser)
 router.post('/login', userController.loginUser)
 router.post('/verify',userController.verifyUser)
 router.post('/logout',userController.logoutUser)
+
 
 export default router
