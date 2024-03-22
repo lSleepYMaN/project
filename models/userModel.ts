@@ -84,11 +84,24 @@ export const updateStatusTo1 = async (username: string) => {
     }
 }
 
-export const updateVerifyCode = async (id: any) => {
+export const updateVerifyCodeTonull = async (id: any) => {
     try {
         return await prisma.user.update({
             where: { id },
             data: { verified_code: null }
+        })
+        
+    } catch (error) {
+        console.log("Update verify ERROR!!")
+        throw error
+    }
+}
+
+export const updateVerifyCode = async (id: any, code: string) => {
+    try {
+        return await prisma.user.update({
+            where: { id },
+            data: { verified_code: code }
         })
         
     } catch (error) {

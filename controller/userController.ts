@@ -89,7 +89,7 @@ export const verifyUser = async (req: Request, res: Response) => {
                 message: 'รหัสยืนยันไม่ถูกต้อง',
             })
         } else {
-            await userModel.updateVerifyCode(req.session.userid)
+            await userModel.updateVerifyCodeTonull(req.session.userid)
             await userModel.updateStatusTo0(req.session.userid)
             req.session.destroy(() => {
                 return res.status(200).json({
@@ -106,6 +106,19 @@ export const verifyUser = async (req: Request, res: Response) => {
         console.error('Verify user ERROR!!!', error)
         return res.status(500).json({ error: 'Verify user ERROR!!!' })
     }
+}
+
+export const sendNewCode = async (req: Request, res: Response) => {
+    const findUser = await userModel.userById(req.session.userid)
+    const email = findUser?.email as string
+    const code = sendEmail.genCode()
+    //await sendEmail.sendMail(email,code)
+    await userModel.updateVerifyCode(req.session.userid, code)
+
+    return res.status(200).json({
+        type: 'Success!!',
+        message: 'Update code สำเร็จ',
+    })
 }
 
 export const loginUser = async (req: Request, res: Response) => {
@@ -174,45 +187,3 @@ export const logoutUser = async (req: Request, res: Response) => {
         return res.status(500).json({ error: 'Logout failed' })
     }
 }
-/*
-export const testUser = async (req: Request, res: Response) => {
-    try {
-        res.send('Test !!!<br>' + req.session.userid + '<br><br>' + req.session.username + '<br>')
-        
-    } catch (error) {
-        console.error('Logout error: ', error)
-        return res.status(500).json({ error: 'Logout failed' })
-    }
-}
-
-export const setUser = async (req: Request, res: Response) => {
-    try {
-        req.session.userid = 20
-        req.session.username = "good"
-        res.send('SETUSER!!!')
-        console.log(req.session.userid)
-        
-    } catch (error) {
-        console.error('Logout error: ', error)
-        return res.status(500).json({ error: 'Logout failed' })
-    }
-}
-
-export const delUser = async (req: Request, res: Response) => {
-    try {
-        res.send('delete')
-        req.session.destroy((err) => {
-            if (err) {
-                console.error('Error destroying session:', err);
-                res.status(500).send('Error destroying session');
-            } else {
-                res.send('Session cookie destroyed');
-            }
-        });
-        console.log(req.session.userid)
-        
-    } catch (error) {
-        console.error('Logout error: ', error)
-        return res.status(500).json({ error: 'Logout failed' })
-    }
-}*/

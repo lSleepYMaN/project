@@ -9,6 +9,6 @@ router.post('/register', userController.registerUser)
 router.post('/login', userController.loginUser)
 router.post('/verify',userController.verifyUser)
 router.post('/logout',userController.logoutUser)
-
+router.post('/sendnewcode',userController.sendNewCode)
 
 export default router
