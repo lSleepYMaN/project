@@ -1,14 +1,13 @@
 import { Request, Response } from "express"
 import { Next } from "mysql2/typings/mysql/lib/parsers/typeCast"
 
-export function checkAuth(req: Request, res: Response, next: Function){
+export const checkAuth = (req: Request, res: Response, next: Function) => {
     try {
 
-        if(req.path === '/login' || req.path === 'register'){
+        if(req.session.userid){
             return next()
         }
-        
-        if (!req.session.userid) {
+        else{
             return res.redirect('/login')
         }
 
