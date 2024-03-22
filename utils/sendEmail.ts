@@ -1,10 +1,10 @@
 import nodemailer from 'nodemailer'
 
 const transporter = nodemailer.createTransport({
-    service: 'outlook',
+    service: 'hotmail',
     auth: {
-            user: 'thailei01@outlook.com',
-            pass: 'Sutee120'
+            user: 'olawaweb@outlook.com',
+            pass: 'Sutee_120'
     }
 })
 
@@ -20,11 +20,10 @@ export const genCode = () => {
 export const sendMail = async (email: string, confirmationCode: string) => {
     try {
         await transporter.sendMail({
-            from: 'thailei01@outlook.com',
+            from: 'olawaweb@outlook.com',
             to: email,
             subject: 'Please confirm your email',
-            text: 'Please click on the following link to confirm your email',
-            html: `<p>Your confirmation code is: <b>${confirmationCode}</b></p>`
+            html: `<h2>Your confirmation code is: <h1><b>${confirmationCode}</b></h1></h2>`
         })
         console.log('Send email success')
         

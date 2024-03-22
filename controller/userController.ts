@@ -60,7 +60,7 @@ export const registerUser = async (req: Request, res: Response) => {
         }
 
         const code = sendEmail.genCode()
-        //await sendEmail.sendMail(email,code)
+        await sendEmail.sendMail(email,code)
 
         const hashedPassword = await bcrypt.hash(password, 10)
 
