@@ -31,8 +31,8 @@ export const createUser = async (username: string, email: string, password: stri
                 username,
                 email,
                 password,
-                created_at: new Date(),
-                updated_at: new Date(),
+                created_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
                 verified_code: code
             }
         })
@@ -47,7 +47,7 @@ export const updateTimeUser = async (username: string) => {
     try {
         return await prisma.user.update({
             where: { username },
-            data: { updated_at: new Date() }
+            data: { updated_at: new Date(new Date().getTime()+(7*60*60*1000)) }
         })
         
     } catch (error) {

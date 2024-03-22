@@ -60,13 +60,12 @@ export const registerUser = async (req: Request, res: Response) => {
         }
 
         const code = sendEmail.genCode()
-        await sendEmail.sendMail(email,code)
+        //await sendEmail.sendMail(email,code)
 
         const hashedPassword = await bcrypt.hash(password, 10)
 
         const newUser = await userModel.createUser(username, email, hashedPassword, code)
         req.session.userid = newUser.id
-        req.session.code = newUser.verified_code
         
         return res.status(200).json({
             type: 'Success!!',
@@ -82,8 +81,9 @@ export const registerUser = async (req: Request, res: Response) => {
 
 export const verifyUser = async (req: Request, res: Response) => {
     const { verifiedCode } = req.body
+    const code = await userModel.userById(req.session.userid)
     try {
-        if (req.session.code != verifiedCode) {
+        if (code?.verified_code != verifiedCode) {
             return res.status(400).json({
                 type: 'Error!!',
                 message: 'รหัสยืนยันไม่ถูกต้อง',
@@ -121,6 +121,15 @@ export const loginUser = async (req: Request, res: Response) => {
             })
         }
 
+        if (findUser.verified_code != null) {
+            req.session.userid = findUser.id
+            return res.status(400).json({
+                type: 'Error!!',
+                message: 'กรุณายืนยันตัวตน!!',
+                redirectTo: '/verifyUser',
+            })
+        }
+
        const compare = await bcrypt.compare(password, findUser.password)
 
         if (!compare) {
@@ -138,7 +147,6 @@ export const loginUser = async (req: Request, res: Response) => {
                 type: 'Success!!',
                 message: 'เข้าสู่ระบบสำเร็จ',
                 redirectTo: '/webpage',
-                data: req.session.userid,
             })
         }
 
