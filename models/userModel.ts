@@ -56,6 +56,19 @@ export const updateTimeUser = async (username: string) => {
     }
 }
 
+export const updatePassUser = async (id: any, newPassword: string) => {
+    try {
+        return await prisma.user.update({
+            where: { id },
+            data: { password: newPassword }
+        })
+        
+    } catch (error) {
+        console.log("Update password ERROR!!")
+        throw error
+    }
+}
+
 export const updateStatusTo0 = async (id: any) => {
     try {
         return await prisma.user.update({

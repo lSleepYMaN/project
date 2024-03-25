@@ -60,7 +60,7 @@ export const registerUser = async (req: Request, res: Response) => {
         }
 
         const code = sendEmail.genCode()
-        //await sendEmail.sendMail(email,code)
+        await sendEmail.sendMailToVerify(email,code)
 
         const hashedPassword = await bcrypt.hash(password, 10)
 
@@ -172,7 +172,6 @@ export const loginUser = async (req: Request, res: Response) => {
 
 export const logoutUser = async (req: Request, res: Response) => {
     try {
-        
         await userModel.updateStatusTo0(req.session.userid)
         req.session.destroy(() => {
             return res.status(200).json({
@@ -187,3 +186,48 @@ export const logoutUser = async (req: Request, res: Response) => {
         return res.status(500).json({ error: 'Logout failed' })
     }
 }
+
+export const forgetPass = async (req: Request, res: Response) => {
+    try {
+        const { email } = req.body
+        const findUser = await userModel.getEmail(email)
+        if (!findUser) {
+            return res.status(500).json({ error: 'No user' }) 
+        }
+        req.session.useridTopass = findUser?.id
+        await sendEmail.sendMailToForget(email)
+
+        return res.status(200).json({
+            type: 'Success!!',
+            message: 'Send email success',
+            redirectTo: '/....',
+        })
+        
+    } catch (error) {
+        console.error('Forget password error: ', error)
+        return res.status(500).json({ error: 'Forget password ERROR!!' })
+    }
+}
+
+export const newPassword = async (req: Request, res: Response) => {
+    try {
+        const { password } = req.body
+        const hashedPassword = await bcrypt.hash(password,10)
+        const updatePass = await userModel.updatePassUser(req.session.useridTopass, hashedPassword)
+        if (!updatePass) {
+            return res.status(400).json({ error: 'Update password ERROR!!'})
+        }
+        req.session.destroy(() => {
+            return res.status(200).json({
+                type: 'Success!!',
+                message: 'Update password สำเร็จ',
+                redirectTo: '/login',
+            }) 
+        })
+        
+    } catch (error) {
+        console.error('Forget password error: ', error)
+        return res.status(500).json({ error: 'Forget password ERROR' })
+    }
+}
+
