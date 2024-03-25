@@ -1,12 +1,24 @@
 import nodemailer from 'nodemailer'
+import { google } from 'googleapis'
+
+const CLIENT_ID = '565936576592-tl7k0p95n927frp6v49bke9mlg6h90ul.apps.googleusercontent.com'
+const CLIENT_SECRET = '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'
+const REDIRECT_URL = 'https://developers.google.com/oauthplayground'
+const REFRESH_TOKEN = '1//04-CGVmoLRmxUCgYIARAAGAQSNgF-L9IrU8T-EIgJUvyAGSB_-I2Jnv_2Ik1vdjBNa0zDdpyaluft9QHu0xwEVGZ3lsoSDAuOhg'
+
+const oAuth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URL)
+oAuth2Client.setCredentials({refresh_token: REFRESH_TOKEN})
 
 const transporter = nodemailer.createTransport({
-    service: 'outlook',
+    service: 'gmail',
     auth: {
-            user: 'olawaweb@outlook.com',
-            pass: 'Sutee_120'
-    }
-})
+            type: 'OAuth2',
+            user: 'olawaweb@gmail.com',
+            clientId: CLIENT_ID,
+            clientSecret: CLIENT_SECRET,
+            refreshToken: REFRESH_TOKEN,
+        }
+    })
 
 export const genCode = () => {
     const characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -19,8 +31,9 @@ export const genCode = () => {
 
 export const sendMailToVerify = async (email: string, confirmationCode: string) => {
     try {
+        
         await transporter.sendMail({
-            from: 'olawaweb@outlook.com',
+            from: 'OLAWAWEB',
             to: email,
             subject: 'Please confirm your email',
             html: `<h2>Your confirmation code is: <h1><b>${confirmationCode}</b></h1></h2>`
@@ -36,11 +49,10 @@ export const sendMailToVerify = async (email: string, confirmationCode: string) 
 export const sendMailToForget = async (email: string) => {
     try {
         await transporter.sendMail({
-            from: 'olawaweb@outlook.com',
+            from: 'OLAWAWEB',
             to: email,
             subject: 'Please click to reset password',
-            html: `<a href="http://localhost:5000/users">Reset password</a>
-                    <button onclick="document.location='default.asp'">HTML Tutorial</button>`
+            html: `<a href="http://localhost:5000/users">Reset password</a>`
         })
         console.log('Send email success')
     } catch (error) {

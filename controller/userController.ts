@@ -68,7 +68,7 @@ export const registerUser = async (req: Request, res: Response) => {
         req.session.userid = newUser.id
         
         return res.status(200).json({
-            type: 'Success!!',
+            type: 'success',
             message: 'ลงทะเบียนสำเร็จ',
             redirectTo: '/verifyUser',
         })
@@ -85,7 +85,7 @@ export const verifyUser = async (req: Request, res: Response) => {
     try {
         if (code?.verified_code != verifiedCode) {
             return res.status(400).json({
-                type: 'Error!!',
+                type: 'error',
                 message: 'รหัสยืนยันไม่ถูกต้อง',
             })
         } else {
@@ -93,7 +93,7 @@ export const verifyUser = async (req: Request, res: Response) => {
             await userModel.updateStatusTo0(req.session.userid)
             req.session.destroy(() => {
                 return res.status(200).json({
-                    type: 'Success!!',
+                    type: 'success',
                     message: 'Update สำเร็จ',
                     redirectTo: '/login',
                 }) 
@@ -103,8 +103,8 @@ export const verifyUser = async (req: Request, res: Response) => {
     
         
     } catch (error) {
-        console.error('Verify user ERROR!!!', error)
-        return res.status(500).json({ error: 'Verify user ERROR!!!' })
+        console.error('Verify user error!', error)
+        return res.status(500).json({ error: 'Verify user error!' })
     }
 }
 
@@ -116,7 +116,7 @@ export const sendNewCode = async (req: Request, res: Response) => {
     await userModel.updateVerifyCode(req.session.userid, code)
 
     return res.status(200).json({
-        type: 'Success!!',
+        type: 'success',
         message: 'Update code สำเร็จ',
     })
 }
@@ -129,7 +129,7 @@ export const loginUser = async (req: Request, res: Response) => {
         
         if (!findUser) {
             return res.status(400).json({
-                type: 'Error!!',
+                type: 'error',
                 message: 'Username หรือ Password ไม่ถูกต้อง',
             })
         }
@@ -137,7 +137,7 @@ export const loginUser = async (req: Request, res: Response) => {
         if (findUser.verified_code != null) {
             req.session.userid = findUser.id
             return res.status(400).json({
-                type: 'Error!!',
+                type: 'error',
                 message: 'กรุณายืนยันตัวตน!!',
                 redirectTo: '/verifyUser',
             })
@@ -147,7 +147,7 @@ export const loginUser = async (req: Request, res: Response) => {
 
         if (!compare) {
             return res.status(400).json({
-                type: 'Error!!',
+                type: 'error',
                 message: 'Password ไม่ถูกต้อง',
              })
         } else {
@@ -157,7 +157,7 @@ export const loginUser = async (req: Request, res: Response) => {
             req.session.userid = findUser.id
             
             return res.status(200).json({
-                type: 'Success!!',
+                type: 'success',
                 message: 'เข้าสู่ระบบสำเร็จ',
                 redirectTo: '/webpage',
             })
@@ -175,7 +175,7 @@ export const logoutUser = async (req: Request, res: Response) => {
         await userModel.updateStatusTo0(req.session.userid)
         req.session.destroy(() => {
             return res.status(200).json({
-                type: 'Success!!',
+                type: 'success',
                 message: 'ออกจากระบบสำเร็จ',
                 redirectTo: '/login',
             }) 
@@ -198,14 +198,14 @@ export const forgetPass = async (req: Request, res: Response) => {
         await sendEmail.sendMailToForget(email)
 
         return res.status(200).json({
-            type: 'Success!!',
+            type: 'success',
             message: 'Send email success',
             redirectTo: '/....',
         })
         
     } catch (error) {
         console.error('Forget password error: ', error)
-        return res.status(500).json({ error: 'Forget password ERROR!!' })
+        return res.status(500).json({ error: 'Forget password error' })
     }
 }
 
@@ -215,11 +215,11 @@ export const newPassword = async (req: Request, res: Response) => {
         const hashedPassword = await bcrypt.hash(password,10)
         const updatePass = await userModel.updatePassUser(req.session.useridTopass, hashedPassword)
         if (!updatePass) {
-            return res.status(400).json({ error: 'Update password ERROR!!'})
+            return res.status(400).json({ error: 'Update password error'})
         }
         req.session.destroy(() => {
             return res.status(200).json({
-                type: 'Success!!',
+                type: 'success',
                 message: 'Update password สำเร็จ',
                 redirectTo: '/login',
             }) 
