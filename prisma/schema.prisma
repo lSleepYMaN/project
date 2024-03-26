@@ -81,13 +81,14 @@ model detection_class {
 }
 
 model district {
-  iddistrict    Int            @id @default(autoincrement())
-  district_name String?        @db.VarChar(100)
-  created_at    DateTime?      @db.DateTime(0)
-  updated_at    DateTime?      @db.DateTime(0)
-  idprovinces   Int
-  provinces     provinces      @relation(fields: [idprovinces], references: [idprovinces], onDelete: NoAction, onUpdate: NoAction, map: "fk_district_provinces")
-  sub_district  sub_district[]
+  iddistrict   Int            @id @default(autoincrement())
+  name_th      String?        @db.VarChar(100)
+  name_en      String?        @db.VarChar(100)
+  created_at   DateTime?      @db.DateTime(0)
+  updated_at   DateTime?      @db.DateTime(0)
+  idprovinces  Int
+  provinces    provinces      @relation(fields: [idprovinces], references: [idprovinces], onDelete: NoAction, onUpdate: NoAction, map: "fk_district_provinces")
+  sub_district sub_district[]
 
   @@index([idprovinces], map: "fk_district_provinces_idx")
 }
@@ -126,11 +127,13 @@ model project {
 }
 
 model provinces {
-  idprovinces   Int        @id @default(autoincrement())
-  province_name String?    @db.VarChar(100)
-  created_at    DateTime?  @db.DateTime(0)
-  updated_at    DateTime?  @db.DateTime(0)
-  district      district[]
+  idprovinces  Int        @id @default(autoincrement())
+  name_th      String?    @db.VarChar(100)
+  name_en      String?    @db.VarChar(100)
+  geography_id Int?
+  created_at   DateTime?  @db.DateTime(0)
+  updated_at   DateTime?  @db.DateTime(0)
+  district     district[]
 }
 
 model segmentation {
@@ -160,13 +163,15 @@ model segmentation_class {
 }
 
 model sub_district {
-  idsub_district    Int       @id @default(autoincrement()) @map("idsub-district")
-  sub_district_name String?   @map("sub-district_name") @db.VarChar(100)
-  created_at        DateTime? @db.DateTime(0)
-  updated_at        DateTime? @db.DateTime(0)
-  iddistrict        Int
-  district          district  @relation(fields: [iddistrict], references: [iddistrict], onDelete: NoAction, onUpdate: NoAction, map: "fk_sub-district_district1")
-  user              user[]
+  idsub_district Int       @id @default(autoincrement()) @map("idsub-district")
+  zip_code       Int       @default(0)
+  name_th        String?   @db.VarChar(100)
+  name_en        String?   @db.VarChar(100)
+  created_at     DateTime? @db.DateTime(0)
+  updated_at     DateTime? @db.DateTime(0)
+  iddistrict     Int
+  district       district  @relation(fields: [iddistrict], references: [iddistrict], onDelete: NoAction, onUpdate: NoAction, map: "fk_sub-district_district1")
+  user           user[]
 
   @@index([iddistrict], map: "fk_sub-district_district1_idx")
   @@map("sub-district")
@@ -178,10 +183,7 @@ model user {
   email          String           @unique(map: "email_UNIQUE") @db.VarChar(100)
   password       String           @db.VarChar(100)
   status         Int              @default(-1)
-  home_number    String?          @db.VarChar(10)
-  road           String?          @db.VarChar(50)
-  alley          String?          @db.VarChar(50)
-  postcode       String?          @db.VarChar(10)
+  address        String?          @db.VarChar(10)
   created_at     DateTime?        @db.DateTime(0)
   updated_at     DateTime?        @db.DateTime(0)
   verified_code  String?          @db.VarChar(45)
