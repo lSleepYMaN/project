@@ -197,10 +197,10 @@ model user {
 }
 
 model user_in_charge {
+  id        Int     @id @default(autoincrement())
   has_allow Int
   idproject Int
   user_id   Int
-  id        Int     @id @default(autoincrement())
   project   project @relation(fields: [idproject], references: [idproject], onDelete: NoAction, onUpdate: NoAction, map: "fk_project_has_user_project1")
   user      user    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_project_has_user_user1")
 
