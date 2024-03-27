@@ -19,11 +19,11 @@ export const createProject = async (projectName: string, projectDes: string) => 
     }
 }
 
-export const user_in_charge = async (userId: any, projectId: any) => {
+export const user_in_charge = async (userId: any, projectId: any, status: any) => {
     try {
         await prisma.user_in_charge.create({
             data:{
-                has_allow: 1,
+                has_allow: status,
                 user_id: userId,
                 idproject: projectId
             }
@@ -32,6 +32,40 @@ export const user_in_charge = async (userId: any, projectId: any) => {
         
     } catch (error) {
         console.log("create user_in_charge is ERROR!!")
+        throw error
+    }
+}
+
+export const getAllproject = async (id: any, status: any) => {
+    try {
+        return await prisma.project.findMany({
+            where:{ user_in_charge: {some: {user_id : id, has_allow: status}}},
+            select: {
+                idproject: true,
+                project_name: true,
+                description: true,
+                root_path: true,
+            }
+        })
+    } catch (error) {
+        console.log("get project is ERROR!!")
+        throw error
+    }
+}
+
+export const getAllprojectByname = async (id: any, name: string) => {
+    try {
+        return await prisma.project.findMany({
+            where:{ user_in_charge: {some: {user_id : id}}, project_name: name },
+            select: {
+                idproject: true,
+                project_name: true,
+                description: true,
+                root_path: true,
+            }
+        })
+    } catch (error) {
+        console.log("get project is ERROR!!")
         throw error
     }
 }

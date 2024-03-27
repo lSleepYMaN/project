@@ -1,5 +1,4 @@
 import { Request, Response } from "express"
-import { Next } from "mysql2/typings/mysql/lib/parsers/typeCast"
 
 export const checkAuth = (req: Request, res: Response, next: Function) => {
     try {
