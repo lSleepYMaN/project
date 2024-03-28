@@ -12,7 +12,7 @@ export const allUser = async () => {
     }
 }
 
-export const userById = async (id: number) => {
+export const userById = async (id: any) => {
     try {
         return await prisma.user.findUnique({
             where : { id }

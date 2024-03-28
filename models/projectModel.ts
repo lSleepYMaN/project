@@ -53,7 +53,24 @@ export const getAllproject = async (id: any, status: any) => {
     }
 }
 
-export const getAllprojectByname = async (id: any, name: string) => {
+export const getAllprojectByname = async (id: any, name: string, status: any) => {
+    try {
+        return await prisma.project.findMany({
+            where:{ user_in_charge: {some: {user_id : id, has_allow: status}}, project_name: name },
+            select: {
+                idproject: true,
+                project_name: true,
+                description: true,
+                root_path: true,
+            }
+        })
+    } catch (error) {
+        console.log("get project is ERROR!!")
+        throw error
+    }
+}
+
+export const getProjectByname = async (id: any, name: string) => {
     try {
         return await prisma.project.findMany({
             where:{ user_in_charge: {some: {user_id : id}}, project_name: name },
@@ -69,3 +86,4 @@ export const getAllprojectByname = async (id: any, name: string) => {
         throw error
     }
 }
+
