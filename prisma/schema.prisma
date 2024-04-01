@@ -179,7 +179,7 @@ model sub_district {
 
 model user {
   id             Int              @id @default(autoincrement())
-  username       String           @unique(map: "username_UNIQUE") @db.VarChar(45)
+  username       String           @unique(map: "username") @db.VarChar(45)
   email          String           @unique(map: "email_UNIQUE") @db.VarChar(100)
   password       String           @db.VarChar(100)
   status         Int              @default(-1)

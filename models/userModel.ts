@@ -46,7 +46,7 @@ export const createUser = async (username: string, email: string, password: stri
 export const updateTimeUser = async (username: string) => {
     try {
         return await prisma.user.update({
-            where: { username },
+            where: {username},
             data: { updated_at: new Date(new Date().getTime()+(7*60*60*1000)) }
         })
         

@@ -3,7 +3,10 @@ import cors from 'cors'
 import userRoutes from './routes/userRoute'
 import projectRoutes from './routes/projectRoute'
 import session from 'express-session'
-import cookie from 'cookie-parser'
+import dotenv from 'dotenv'
+const cookie = require('cookie-parser')
+
+dotenv.config()
 const app = express()
 
 app.use(session({

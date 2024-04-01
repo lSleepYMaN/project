@@ -2,6 +2,7 @@ import { Request, Response } from "express"
 import * as userModel from '../models/userModel'
 import bcrypt from 'bcryptjs'
 import * as sendEmail from '../utils/sendEmail'
+const jwt = require('jsonwebtoken')
 
 export const getAllUsers = async (req: Request, res: Response) => {
     try {
@@ -65,7 +66,6 @@ export const registerUser = async (req: Request, res: Response) => {
         const hashedPassword = await bcrypt.hash(password, 10)
 
         const newUser = await userModel.createUser(username, email, hashedPassword, code)
-        req.session.userid = newUser.id
         
         return res.status(200).json({
             type: 'success',
@@ -81,6 +81,7 @@ export const registerUser = async (req: Request, res: Response) => {
 
 export const verifyUser = async (req: Request, res: Response) => {
     const { verifiedCode } = req.body
+    console.log(verifiedCode)
     const code = await userModel.userById(req.session.userid)
     try {
         if (code?.verified_code != verifiedCode) {
@@ -135,7 +136,6 @@ export const loginUser = async (req: Request, res: Response) => {
         }
 
         if (findUser.verified_code != null) {
-            req.session.userid = findUser.id
             return res.status(400).json({
                 type: 'error',
                 message: 'กรุณายืนยันตัวตน!!',
@@ -154,12 +154,19 @@ export const loginUser = async (req: Request, res: Response) => {
             await userModel.updateTimeUser(username)
             await userModel.updateStatusTo1(username)
 
-            req.session.userid = findUser.id
-            
-            return res.status(200).json({
+            const token = jwt.sign({id: findUser.id, username}, process.env.SECRET as string, { expiresIn: '24h'})
+            // res.cookie('token', token, {
+            //     maxAge: 24*60*60*1000,
+            //     secure: true,
+            //     httpOnly: true,
+            //     sameSite: 'none',
+            // })
+
+            res.status(200).json({
                 type: 'success',
                 message: 'เข้าสู่ระบบสำเร็จ',
-                redirectTo: '/webpage',
+                token,
+                //redirectTo: '/webpage',
             })
         }
 
@@ -231,3 +238,16 @@ export const newPassword = async (req: Request, res: Response) => {
     }
 }
 
+export const testSession = async (req: Request, res: Response) => {
+    try {
+        
+        console.log('test',req.session.id)
+        return res.status(200).json({
+            message: req.session.userid
+        })
+        
+    } catch (error) {
+        console.error('......', error)
+        return res.status(500).json({ error: '......' })
+    }
+}
