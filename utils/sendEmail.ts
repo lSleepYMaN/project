@@ -23,20 +23,20 @@ const transporter = nodemailer.createTransport({
 export const genCode = () => {
     const characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
     let code = ''
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 32; i++) {
         code += characters[Math.floor(Math.random() * characters.length)];
       }
       return code;
 }
 
-export const sendMailToVerify = async (email: string, confirmationCode: string) => {
+export const sendMailToVerify = async (email: string) => {
     try {
         
         await transporter.sendMail({
             from: 'OLAWAWEB',
             to: email,
             subject: 'Please confirm your email',
-            html: `<h2>Your confirmation code is: <h1><b>${confirmationCode}</b></h1></h2>`
+            html: `<a href="https://aiat.wattanapong.com">Verify</a>`
         })
         console.log('Send email success')
         
@@ -52,7 +52,7 @@ export const sendMailToForget = async (email: string) => {
             from: 'OLAWAWEB',
             to: email,
             subject: 'Please click to reset password',
-            html: `<a href="http://localhost:5000/users">Reset password</a>`
+            html: `<a href="https://aiat.wattanapong.com">Reset password</a>`
         })
         console.log('Send email success')
     } catch (error) {

@@ -15,11 +15,7 @@ app.use(session({
   saveUninitialized: true
 }));
 
-const corsOptions = {
-  origin: 'http://localhost:3000',
-  optionsSuccessStatus: 200 
-};
-app.use(cors(corsOptions))
+app.use(cors({ origin: 'http://localhost:3000', credentials: true}))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookie())

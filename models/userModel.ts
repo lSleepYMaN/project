@@ -145,3 +145,15 @@ export const getEmail = async (email: string) => {
         throw error
     }
 }
+
+export const Verify = async (code: string) => {
+    try {
+        return await prisma.user.findFirst({
+            where: { verified_code: code }
+        })
+        
+    } catch (error) {
+        console.log("Get Verify code ERROR!! ")
+        throw error
+    }
+}

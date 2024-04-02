@@ -2,12 +2,13 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient()
 
-export const createProject = async (projectName: string, projectDes: string) => {
+export const createProject = async (projectName: string, projectDes: string, dir: string) => {
     try {
         return await prisma.project.create({
             data:{
                 project_name: projectName,
                 description: projectDes,
+                root_path: dir,
                 created_at: new Date(new Date().getTime()+(7*60*60*1000)),
                 updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
             }

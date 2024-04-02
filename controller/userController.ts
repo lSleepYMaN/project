@@ -61,11 +61,18 @@ export const registerUser = async (req: Request, res: Response) => {
         }
 
         const code = sendEmail.genCode()
-       // await sendEmail.sendMailToVerify(email,code)
+        await sendEmail.sendMailToVerify(email)
 
         const hashedPassword = await bcrypt.hash(password, 10)
 
         const newUser = await userModel.createUser(username, email, hashedPassword, code)
+        const codeVer = jwt.sign({code: code}, process.env.SECRET as string, { expiresIn: '30m'})
+            res.cookie('code', codeVer, {
+                maxAge: 0.5*60*60*1000,
+                secure: true,
+                httpOnly: true,
+                sameSite: 'none',
+        })
         
         return res.status(200).json({
             type: 'success',
@@ -80,25 +87,25 @@ export const registerUser = async (req: Request, res: Response) => {
 }
 
 export const verifyUser = async (req: Request, res: Response) => {
-    const { verifiedCode } = req.body
-    console.log(verifiedCode)
-    const code = await userModel.userById(req.session.userid)
+    const code = req.cookies.code
+    const verCode = jwt.verify(code, process.env.SECRET as string)
+    const getCode = await userModel.Verify(verCode.code)
     try {
-        if (code?.verified_code != verifiedCode) {
+        if (!getCode) {
             return res.status(400).json({
                 type: 'error',
-                message: 'รหัสยืนยันไม่ถูกต้อง',
+                message: 'ยืนยันตัวตนไม่ถูกต้อง',
             })
         } else {
-            await userModel.updateVerifyCodeTonull(req.session.userid)
-            await userModel.updateStatusTo0(req.session.userid)
-            req.session.destroy(() => {
-                return res.status(200).json({
-                    type: 'success',
-                    message: 'Update สำเร็จ',
-                    redirectTo: '/login',
-                }) 
-            })
+            await userModel.updateVerifyCodeTonull(getCode.id)
+            await userModel.updateStatusTo0(getCode.id)
+            res.clearCookie('code')
+            return res.status(200).json({
+                type: 'success',
+                message: 'Update สำเร็จ',
+                redirectTo: '/login',
+            }) 
+
             
         }
     
@@ -113,7 +120,7 @@ export const sendNewCode = async (req: Request, res: Response) => {
     const findUser = await userModel.userById(req.session.userid)
     const email = findUser?.email as string
     const code = sendEmail.genCode()
-    //await sendEmail.sendMail(email,code)
+    await sendEmail.sendMailToVerify(email)
     await userModel.updateVerifyCode(req.session.userid, code)
 
     return res.status(200).json({
@@ -154,19 +161,19 @@ export const loginUser = async (req: Request, res: Response) => {
             await userModel.updateTimeUser(username)
             await userModel.updateStatusTo1(username)
 
-            const token = jwt.sign({id: findUser.id, username}, process.env.SECRET as string, { expiresIn: '24h'})
-            // res.cookie('token', token, {
-            //     maxAge: 24*60*60*1000,
-            //     secure: true,
-            //     httpOnly: true,
-            //     sameSite: 'none',
-            // })
+            const token = jwt.sign({id: findUser.id}, process.env.SECRET as string, { expiresIn: '24h'})
+            res.cookie('token', token, {
+                maxAge: 24*60*60*1000,
+                secure: true,
+                httpOnly: true,
+                sameSite: 'none',
+            })
 
             res.status(200).json({
                 type: 'success',
                 message: 'เข้าสู่ระบบสำเร็จ',
-                token,
-                //redirectTo: '/webpage',
+                //token,
+                redirectTo: '/webpage',
             })
         }
 
@@ -179,14 +186,16 @@ export const loginUser = async (req: Request, res: Response) => {
 
 export const logoutUser = async (req: Request, res: Response) => {
     try {
-        await userModel.updateStatusTo0(req.session.userid)
-        req.session.destroy(() => {
-            return res.status(200).json({
-                type: 'success',
-                message: 'ออกจากระบบสำเร็จ',
-                redirectTo: '/login',
-            }) 
-        })
+        const token = req.cookies.token
+        const user = jwt.verify(token, process.env.SECRET as string)
+        await userModel.updateStatusTo0(user.id)
+        res.clearCookie('token')
+        return res.status(200).json({
+            type: 'success',
+            message: 'ออกจากระบบสำเร็จ',
+            redirectTo: '/login',
+        }) 
+        
         
     } catch (error) {
         console.error('Logout error: ', error)
@@ -201,7 +210,14 @@ export const forgetPass = async (req: Request, res: Response) => {
         if (!findUser) {
             return res.status(500).json({ error: 'No user' }) 
         }
-        req.session.useridTopass = findUser?.id
+        const forgetPassToken = jwt.sign({id: findUser.id}, process.env.SECRET as string, { expiresIn: '24h'})
+        res.cookie('token', forgetPassToken, {
+            maxAge: 24*60*60*1000,
+            secure: true,
+            httpOnly: true,
+            sameSite: 'none',
+        })
+
         await sendEmail.sendMailToForget(email)
 
         return res.status(200).json({
@@ -218,19 +234,21 @@ export const forgetPass = async (req: Request, res: Response) => {
 
 export const newPassword = async (req: Request, res: Response) => {
     try {
+        const token = req.cookies.forgetPassToken
+        const user = jwt.verify(token, process.env.SECRET as string)
         const { password } = req.body
         const hashedPassword = await bcrypt.hash(password,10)
-        const updatePass = await userModel.updatePassUser(req.session.useridTopass, hashedPassword)
+        const updatePass = await userModel.updatePassUser(user.id, hashedPassword)
         if (!updatePass) {
+            res.clearCookie('forgetPassToken')
             return res.status(400).json({ error: 'Update password error'})
         }
-        req.session.destroy(() => {
-            return res.status(200).json({
-                type: 'success',
-                message: 'Update password สำเร็จ',
-                redirectTo: '/login',
-            }) 
-        })
+        res.clearCookie('forgetPassToken')
+        return res.status(200).json({
+            type: 'success',
+            message: 'Update password สำเร็จ',
+            redirectTo: '/login',
+        }) 
         
     } catch (error) {
         console.error('Forget password error: ', error)

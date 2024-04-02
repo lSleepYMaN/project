@@ -2,15 +2,16 @@ import { Request, Response } from "express"
 
 export const checkAuth = (req: Request, res: Response, next: Function) => {
     try {
-        const authHeader = req.headers['authorization']
+       // const authHeader = req.headers['authorization']
+       const token = req.cookies.token
 
-        if(authHeader){
-            console.log(authHeader)
+        if(token){
+            console.log(token)
             console.log('have token')
             return next()
         }
         else{
-            console.log(authHeader)
+            console.log(token)
             console.log('no token')
             return res.status(200).json({
                 type: 'error',
