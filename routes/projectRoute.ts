@@ -11,5 +11,6 @@ router.get('/allProject', check.checkAuth, projectController.getAllproject)
 router.post('/shareProject', check.checkAuth, projectController.createShareProject)
 router.get('/allProject/share', check.checkAuth, projectController.getShareproject)
 router.post('/uploadImage', check.checkAuth, upload.array('image'), projectController.uploadImage)
+router.get('/project/:id', projectController.getAllprojectById )
 
 export default router

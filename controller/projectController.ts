@@ -25,7 +25,7 @@ export const createProject = async (req: Request, res: Response) => {
         return res.status(200).json({
             type: 'success',
             message: 'สร้าง project สำเร็จ',
-            redirectTo: '/.....',
+            create,
         })
         
     } catch (error) {
@@ -69,6 +69,12 @@ export const getAllproject = async (req: Request, res: Response) => {
     return res.json(project)
 } 
 
+export const getAllprojectById = async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id)
+    const project = await projectModel.getAllprojectById(id)
+    return res.status(200).json({type: 'success', project})
+} 
+
 export const getShareproject = async (req: Request, res: Response) => {
     const token = req.cookies.token
     const user = jwt.verify(token, process.env.SECRET as string)
@@ -83,7 +89,7 @@ export const uploadImage = async (req: Request, res: Response) => {
         const token = req.cookies.token
         const user = jwt.verify(token, process.env.SECRET as string)
         const files = req.files as Express.Multer.File[]
-        const { project_name } = req.body
+        const { project_name, type } = req.body
         
         if (!files || files.length === 0) {
             return res.status(400).json({ message: 'No image uploaded' })
@@ -91,7 +97,7 @@ export const uploadImage = async (req: Request, res: Response) => {
         const data_project = await projectModel.getProjectByname(user.id, project_name)
         const dir = data_project[0].root_path as string
         
-        const ress = imageModel.saveImage(dir,files)
+        const ress = imageModel.saveImage(dir, type, files)
 
         if(!ress){
             return res.status(400).json({

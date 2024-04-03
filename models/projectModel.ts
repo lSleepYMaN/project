@@ -54,6 +54,22 @@ export const getAllproject = async (id: any, status: any) => {
     }
 }
 
+export const getAllprojectById = async (id: any) => {
+    try {
+        return await prisma.project.findUnique({
+            where:{ idproject: id },
+            select: {
+                project_name: true,
+                description: true,
+                root_path: true,
+            }
+        })
+    } catch (error) {
+        console.log("get project is ERROR!!")
+        throw error
+    }
+}
+
 export const getAllprojectByname = async (id: any, name: string, status: any) => {
     try {
         return await prisma.project.findMany({
