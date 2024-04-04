@@ -2,15 +2,26 @@ import { Request, Response } from "express"
 import * as userModel from '../models/userModel'
 import bcrypt from 'bcryptjs'
 import * as sendEmail from '../utils/sendEmail'
+import { isNull } from "util"
 const jwt = require('jsonwebtoken')
 
 export const getAllUsers = async (req: Request, res: Response) => {
     try {
         const users = await userModel.allUser()
-        res.json(users)
+        if(!users){
+            return res.status(400).json({
+                type: 'failed',
+                message: 'get users ล้มเหลว'
+        })
+        }
+        return res.status(200).json({
+                type: 'success',
+                message: 'get users สำเร็จ',
+                users
+        })
     } catch (error) {
         console.error('error:', error);
-        return res.status(500).json({ error: 'failed' })
+        return res.status(400).json({ error: 'get all users ERROR!!' })
     }
 }
 
@@ -18,71 +29,99 @@ export const getUserById = async (req: Request, res: Response) => {
     const id = parseInt(req.params.id)
     try {
         const user = await userModel.userById(id)
+        if(!user){
+            return res.status(400).json({
+                type: 'failed',
+                message: 'get user ล้มเหลว'
+        })
+        }
+        return res.status(200).json({
+                type: 'success',
+                message: 'get user สำเร็จ',
+                user
+        })
         
     } catch (error) {
         console.error('error:', error);
-        return res.status(500).json({ error: 'failed' })
+        return res.status(400).json({ error: 'get user by id ERROR!!' })
     }
 }
 
 export const registerUser = async (req: Request, res: Response) => {
-    const { username, email, password, comPassword } = req.body
+    const { username, email, password, conPassword } = req.body
     const validUsername = /^[a-zA-Z0-9_]{8,}$/.test(username)
     const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
     const validPass = /^.{8,}$/.test(password)
     
     if(!validUsername){
-        return res.status(400).json({ error: 'Username ไม่ตรงตามเงื่อนไข'})
+        return res.status(400).json({
+            type: 'failed',
+            message:'Username ไม่ตรงตามเงื่อนไข',
+        })
     }
 
     if (!validEmail) {
-        return res.status(400).json({ error: 'Email ไม่ถูกต้อง'})
+        return res.status(400).json({ 
+            type: 'failed',
+            message: 'Email ไม่ถูกต้อง',
+        })
     }
 
     if (!validPass) {
-        return res.status(400).json({ error: 'Password ไม่ตรงตามเงื่อนไข'})
+        return res.status(400).json({ 
+            type: 'failed',
+            message: 'Password ไม่ตรงตามเงื่อนไข',
+        })
     }
 
     try {
         const checkUser = await userModel.getUsername(username)
 
         if (checkUser) {
-            return res.status(400).json({ error: 'Username ถูกใช้งานแล้ว' })
+            return res.status(400).json({ 
+                type: 'failed',
+                message: 'Username ถูกใช้งานแล้ว', 
+            })
         }
 
         const checkEmail = await userModel.getEmail(email)
 
         if (checkEmail) {
-            return res.status(400).json({ error: 'Email ถูกใช้งานแล้ว' })
+            return res.status(400).json({ 
+                type: 'failed',
+                message: 'Email ถูกใช้งานแล้ว',
+            })
         }
 
-        if (comPassword != password){
-            return res.status(400).json({ error: 'Password ไม่ตรงกัน' })
+        if (conPassword != password){
+            return res.status(400).json({ 
+                type: 'failed',
+                message: 'Password ไม่ตรงกัน',
+            })
         }
 
         const code = sendEmail.genCode()
-        await sendEmail.sendMailToVerify(email)
+        //await sendEmail.sendMailToVerify(email)
 
         const hashedPassword = await bcrypt.hash(password, 10)
 
         const newUser = await userModel.createUser(username, email, hashedPassword, code)
-        const codeVer = jwt.sign({code: code}, process.env.SECRET as string, { expiresIn: '30m'})
-            res.cookie('code', codeVer, {
-                maxAge: 0.5*60*60*1000,
-                secure: true,
-                httpOnly: true,
-                sameSite: 'none',
-        })
+        // const codeVer = jwt.sign({code: code}, process.env.SECRET as string, { expiresIn: '30m'})
+        //     res.cookie('code', codeVer, {
+        //         maxAge: 0.5*60*60*1000,
+        //         secure: true,
+        //         httpOnly: true,
+        //         sameSite: 'none',
+        // })
         
         return res.status(200).json({
             type: 'success',
             message: 'ลงทะเบียนสำเร็จ',
-            redirectTo: '/verifyUser',
         })
 
     } catch (error) {
         console.error('Registration error:', error);
-        return res.status(500).json({ error: 'Registration failed' })
+        return res.status(400).json({ error: 'Registration failed' })
     }
 }
 
@@ -93,7 +132,7 @@ export const verifyUser = async (req: Request, res: Response) => {
     try {
         if (!getCode) {
             return res.status(400).json({
-                type: 'error',
+                type: 'failed',
                 message: 'ยืนยันตัวตนไม่ถูกต้อง',
             })
         } else {
@@ -102,17 +141,14 @@ export const verifyUser = async (req: Request, res: Response) => {
             res.clearCookie('code')
             return res.status(200).json({
                 type: 'success',
-                message: 'Update สำเร็จ',
-                redirectTo: '/login',
+                message: 'Verify สำเร็จ',
             }) 
-
-            
+ 
         }
     
-        
     } catch (error) {
         console.error('Verify user error!', error)
-        return res.status(500).json({ error: 'Verify user error!' })
+        return res.status(400).json({ error: 'Verify user ERROR!!' })
     }
 }
 
@@ -120,13 +156,19 @@ export const sendNewCode = async (req: Request, res: Response) => {
     const findUser = await userModel.userById(req.session.userid)
     const email = findUser?.email as string
     const code = sendEmail.genCode()
-    await sendEmail.sendMailToVerify(email)
-    await userModel.updateVerifyCode(req.session.userid, code)
+    try {
+        await sendEmail.sendMailToVerify(email)
+        await userModel.updateVerifyCode(req.session.userid, code)
 
-    return res.status(200).json({
-        type: 'success',
-        message: 'Update code สำเร็จ',
-    })
+        return res.status(200).json({
+            type: 'success',
+            message: 'Update code สำเร็จ',
+        })
+    } catch (error) {
+        console.error('Verify user error!', error)
+        return res.status(400).json({ error: 'send new code ERROR!!' })
+    }
+    
 }
 
 export const loginUser = async (req: Request, res: Response) => {
@@ -137,16 +179,15 @@ export const loginUser = async (req: Request, res: Response) => {
         
         if (!findUser) {
             return res.status(400).json({
-                type: 'error',
+                type: 'failed',
                 message: 'Username หรือ Password ไม่ถูกต้อง',
             })
         }
 
         if (findUser.verified_code != null) {
             return res.status(400).json({
-                type: 'error',
+                type: 'failed',
                 message: 'กรุณายืนยันตัวตน!!',
-                redirectTo: '/verifyUser',
             })
         }
 
@@ -154,14 +195,14 @@ export const loginUser = async (req: Request, res: Response) => {
 
         if (!compare) {
             return res.status(400).json({
-                type: 'error',
+                type: 'failed',
                 message: 'Password ไม่ถูกต้อง',
              })
         } else {
             await userModel.updateTimeUser(username)
             await userModel.updateStatusTo1(username)
 
-            const token = jwt.sign({id: findUser.id}, process.env.SECRET as string, { expiresIn: '24h'})
+            const token = jwt.sign({id: findUser.id, username: findUser.username}, process.env.SECRET as string, { expiresIn: '24h'})
             res.cookie('token', token, {
                 maxAge: 24*60*60*1000,
                 secure: true,
@@ -172,14 +213,12 @@ export const loginUser = async (req: Request, res: Response) => {
             res.status(200).json({
                 type: 'success',
                 message: 'เข้าสู่ระบบสำเร็จ',
-                //token,
-                redirectTo: '/webpage',
             })
         }
 
     } catch (error) {
         console.error('Login error: ', error);
-        return res.status(500).json({ error: 'Login failed' })
+        return res.status(400).json({ error: 'Login failed' })
     }
 
 }
@@ -193,13 +232,12 @@ export const logoutUser = async (req: Request, res: Response) => {
         return res.status(200).json({
             type: 'success',
             message: 'ออกจากระบบสำเร็จ',
-            redirectTo: '/login',
         }) 
         
         
     } catch (error) {
-        console.error('Logout error: ', error)
-        return res.status(500).json({ error: 'Logout failed' })
+        console.error('error:', error);
+        return res.status(400).json({ error: 'logout ERROR!!' })
     }
 }
 
@@ -208,7 +246,10 @@ export const forgetPass = async (req: Request, res: Response) => {
         const { email } = req.body
         const findUser = await userModel.getEmail(email)
         if (!findUser) {
-            return res.status(500).json({ error: 'No user' }) 
+            return res.status(500).json({
+                type: 'failed',
+                message: 'No user' 
+            }) 
         }
         const forgetPassToken = jwt.sign({id: findUser.id}, process.env.SECRET as string, { expiresIn: '24h'})
         res.cookie('token', forgetPassToken, {
@@ -223,12 +264,11 @@ export const forgetPass = async (req: Request, res: Response) => {
         return res.status(200).json({
             type: 'success',
             message: 'Send email success',
-            redirectTo: '/....',
         })
         
     } catch (error) {
-        console.error('Forget password error: ', error)
-        return res.status(500).json({ error: 'Forget password error' })
+        console.error('error:', error);
+        return res.status(400).json({ error: 'forget password ERROR!!' })
     }
 }
 
@@ -241,18 +281,20 @@ export const newPassword = async (req: Request, res: Response) => {
         const updatePass = await userModel.updatePassUser(user.id, hashedPassword)
         if (!updatePass) {
             res.clearCookie('forgetPassToken')
-            return res.status(400).json({ error: 'Update password error'})
+            return res.status(400).json({ 
+                type: 'failed',
+                message: 'Update password error'
+            })
         }
         res.clearCookie('forgetPassToken')
         return res.status(200).json({
             type: 'success',
             message: 'Update password สำเร็จ',
-            redirectTo: '/login',
         }) 
         
     } catch (error) {
-        console.error('Forget password error: ', error)
-        return res.status(500).json({ error: 'Forget password ERROR' })
+        console.error('error:', error);
+        return res.status(400).json({ error: 'new password ERROR!!' })
     }
 }
 

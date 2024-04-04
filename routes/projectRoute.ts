@@ -6,11 +6,12 @@ const router = express.Router()
 const storage = multer.memoryStorage()
 const upload = multer({ storage: storage })
 
-router.post('/createProject', check.checkAuth, projectController.createProject)
+router.post('/create/project', check.checkAuth, projectController.createProject)
 router.get('/allProject', check.checkAuth, projectController.getAllproject)
 router.post('/shareProject', check.checkAuth, projectController.createShareProject)
 router.get('/allProject/share', check.checkAuth, projectController.getShareproject)
 router.post('/uploadImage', check.checkAuth, upload.array('image'), projectController.uploadImage)
-router.get('/project/:id', projectController.getAllprojectById )
+router.get('/project/:id', projectController.getprojectById )
+router.post('/create/detection', check.checkAuth, projectController.createDetection)
 
 export default router

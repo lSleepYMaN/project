@@ -1,4 +1,6 @@
 import { PrismaClient } from "@prisma/client";
+import fs from 'fs'
+import path from "path";
 
 const prisma = new PrismaClient()
 
@@ -54,11 +56,12 @@ export const getAllproject = async (id: any, status: any) => {
     }
 }
 
-export const getAllprojectById = async (id: any) => {
+export const getprojectById = async (id: any) => {
     try {
         return await prisma.project.findUnique({
             where:{ idproject: id },
             select: {
+                idproject: true,
                 project_name: true,
                 description: true,
                 root_path: true,
@@ -87,20 +90,20 @@ export const getAllprojectByname = async (id: any, name: string, status: any) =>
     }
 }
 
-export const getProjectByname = async (id: any, name: string) => {
-    try {
-        return await prisma.project.findMany({
-            where:{ user_in_charge: {some: {user_id : id}}, project_name: name },
-            select: {
-                idproject: true,
-                project_name: true,
-                description: true,
-                root_path: true,
-            }
-        })
-    } catch (error) {
-        console.log("get project is ERROR!!")
-        throw error
-    }
+
+export const createFolder = async (name: string, username: string) => {
+    let dirname: string = name + '_' + username
+    const uploadDir = path.join(__dirname, '../project_path' , dirname)
+    fs.mkdirSync(uploadDir);
+    
+    return uploadDir as string
+
 }
 
+export const createDetectionFolder = async (dir: string) => {
+    let pathDir = path.join(dir, 'detection', 'images')
+    fs.mkdirSync(pathDir, { recursive: true });
+    
+    return pathDir
+
+}

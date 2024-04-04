@@ -15,11 +15,14 @@ export const createProject = async (req: Request, res: Response) => {
         if (checkName[0]) {
             return res.status(500).json({ error: 'This name is already in use.' })
         }
-        const dir = await imageModel.createFolder(project_name)
+        const dir = await projectModel.createFolder(project_name, user.username)
         const create = await projectModel.createProject(project_name, description, dir)
         const userin = await projectModel.user_in_charge(user.id, create.idproject, 1)
         if(!userin) {
-            return res.status(500).json({ error: 'create project failed' })
+            return res.status(500).json({ 
+                type: 'failed',
+                message: 'สร้าง project ล้มเหลว', 
+            })
         }
 
         return res.status(200).json({
@@ -34,74 +37,157 @@ export const createProject = async (req: Request, res: Response) => {
     }
 }
 
-export const createShareProject = async (req: Request, res: Response) => {
-    const { project_name, username } = req.body
-    const token = req.cookies.token
-    const userToken = jwt.verify(token, process.env.SECRET as string)
+export const createDetection = async (req: Request, res: Response) => {
+    try {
+        const idproject = parseInt(req.body.idproject)
+        const project = await projectModel.getprojectById(idproject)
+        const create = await projectModel.createDetectionFolder(project?.root_path as string)
 
+        if(!create) {
+            return res.status(500).json({ 
+                type: 'failed',
+                message: 'สร้าง project detection ล้มเหลว', 
+            })
+        }
+
+        return res.status(200).json({
+            type: 'success',
+            message: 'สร้าง project detection สำเร็จ',
+            create
+        })
+        
+    } catch (error) {
+        console.error('error:', error);
+        return res.status(500).json({ error: 'create detection project ERROR!!' })
+    }
+}
+
+export const createShareProject = async (req: Request, res: Response) => {
+    const idproject = parseInt(req.body.idproject)
+    const username = req.body.username
     try {
         const user = await userModel.getUsername(username)
-        const project = await projectModel.getAllprojectByname(userToken.id, project_name, 1)
-        const createShare = await projectModel.user_in_charge(user?.id, project[0].idproject, 2)
+        const createShare = await projectModel.user_in_charge(user?.id, idproject, 2)
 
         if(!createShare) {
-            return res.status(500).json({ error: 'create share failed' })
+            return res.status(500).json({ 
+                type: 'failed',
+                message: 'สร้าง share project ล้มเหลว', 
+            })
         }
 
         return res.status(200).json({
             type: 'success',
             message: 'สร้าง share project สำเร็จ',
-            redirectTo: '/.....',
         })
         
     } catch (error) {
         console.error('error:', error);
-        return res.status(500).json({ error: 'create share ERROR!!' })
+        return res.status(400).json({ error: 'create share ERROR!!' })
     }
 }
 
 export const getAllproject = async (req: Request, res: Response) => {
-    const token = req.cookies.token
-    const user = jwt.verify(token, process.env.SECRET as string)
-    const project = await projectModel.getAllproject(user.id, 1)
+    try {
+        const token = req.cookies.token
+        const user = jwt.verify(token, process.env.SECRET as string)
+        const project = await projectModel.getAllproject(user.id, 1)
 
-    console.log(project)
-    return res.json(project)
+        if(!project) {
+            return res.status(400).json({ 
+                type: 'failed',
+                message: 'get project ล้มเหลว', 
+            })
+        }
+
+        return res.status(200).json({
+            type: 'success',
+            message: 'get project สำเร็จ',
+            project,
+            
+        })
+            
+    } catch (error) {
+        console.error('error:', error);
+        return res.status(400).json({ error: 'get all project ERROR!!' })
+    }
+    
 } 
 
-export const getAllprojectById = async (req: Request, res: Response) => {
+export const getprojectById = async (req: Request, res: Response) => {
     const id = parseInt(req.params.id)
-    const project = await projectModel.getAllprojectById(id)
-    return res.status(200).json({type: 'success', project})
+    try {
+        const project = await projectModel.getprojectById(id)
+
+        if(!project) {
+            return res.status(400).json({ 
+                type: 'failed',
+                message: 'get project ล้มเหลว', 
+            })
+        }
+
+        return res.status(200).json({
+            type: 'success',
+            message: 'get project สำเร็จ',
+            project,
+            
+        })
+        
+    } catch (error) {
+        console.error('error:', error);
+        return res.status(400).json({ error: 'get project by id ERROR!!' })
+    }
+    
 } 
 
 export const getShareproject = async (req: Request, res: Response) => {
     const token = req.cookies.token
     const user = jwt.verify(token, process.env.SECRET as string)
-    const project = await projectModel.getAllproject(user.id, 2)
 
-    console.log(project)
-    return res.json(project)
+    try {
+        const project = await projectModel.getAllproject(user.id, 2)
+
+        if(!project) {
+            return res.status(400).json({ 
+                type: 'failed',
+                message: 'get share project ล้มเหลว', 
+            })
+        }
+
+        return res.status(200).json({
+            type: 'success',
+            message: 'get share project สำเร็จ',
+            project,
+            
+        })
+        
+    } catch (error) {
+        console.error('error:', error);
+        return res.status(400).json({ error: 'get share project ERROR!!' })
+    }
+    
 } 
 
 export const uploadImage = async (req: Request, res: Response) => {
     try {
-        const token = req.cookies.token
-        const user = jwt.verify(token, process.env.SECRET as string)
         const files = req.files as Express.Multer.File[]
-        const { project_name, type } = req.body
+        const idproject = parseInt(req.body.idproject)
+        const type = req.body.type
         
         if (!files || files.length === 0) {
-            return res.status(400).json({ message: 'No image uploaded' })
+            return res.status(400).json({ 
+                type: 'failed',
+                message: 'No image uploaded'
+            })
         }
-        const data_project = await projectModel.getProjectByname(user.id, project_name)
-        const dir = data_project[0].root_path as string
+        const data_project = await projectModel.getprojectById(idproject)
+        const dir = data_project?.root_path as string
         
         const ress = imageModel.saveImage(dir, type, files)
 
         if(!ress){
             return res.status(400).json({
-                type: 'error',
+                type: 'failed',
                 message: 'upload image fail'
         })
         }
@@ -110,11 +196,8 @@ export const uploadImage = async (req: Request, res: Response) => {
                 message: 'upload image success'
         })
     } catch (error) {
-        console.error('Error uploading images:', error);
-        return res.status(500).json({
-            type: 'error',
-            message: 'Internal server error'
-        })
+        console.error('error:', error);
+        return res.status(400).json({ error: 'upload image ERROR!!' })
     }
     
 }

@@ -16,7 +16,6 @@ export const checkAuth = (req: Request, res: Response, next: Function) => {
             return res.status(200).json({
                 type: 'error',
                 message: 'กรุณา login',
-                redirectTo: '/login',
             })
         }
 
