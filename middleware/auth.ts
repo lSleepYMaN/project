@@ -6,12 +6,10 @@ export const checkAuth = (req: Request, res: Response, next: Function) => {
        const token = req.cookies.token
 
         if(token){
-            console.log(token)
             console.log('have token')
             return next()
         }
         else{
-            console.log(token)
             console.log('no token')
             return res.status(200).json({
                 type: 'error',

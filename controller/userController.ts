@@ -298,6 +298,23 @@ export const newPassword = async (req: Request, res: Response) => {
     }
 }
 
+export const returnUsername = async (req: Request, res: Response) => {
+    try {
+        const token = req.cookies.token
+        const user = jwt.verify(token, process.env.SECRET as string)
+
+        return res.status(200).json({
+            type: 'success',
+            message: 'ส่งค่า username สำเร็จ',
+            username: user.username,
+        })
+        
+    } catch (error) {
+        console.error('error:', error);
+        return res.status(400).json({ error: 'return Username ERROR!!' })
+    }
+}
+
 export const testSession = async (req: Request, res: Response) => {
     try {
         

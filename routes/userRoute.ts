@@ -14,5 +14,6 @@ router.post('/sendnewcode',userController.sendNewCode)
 router.post('/forgetPassword',userController.forgetPass)
 router.post('/newPassword',check.checkAuth2, userController.newPassword)
 router.get('/test', userController.testSession)
+router.get('/returnUsername', check.checkAuth, userController.returnUsername)
 
 export default router
