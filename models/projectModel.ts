@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { dir } from "console";
 import fs from 'fs'
 import path from "path";
 
@@ -90,20 +91,67 @@ export const getAllprojectByname = async (id: any, name: string, status: any) =>
     }
 }
 
+export const deleteProject = async (id: any) => {
+    try {
+        return await prisma.project.delete({
+            where: {idproject: id}
+        })
+        
+    } catch (error) {
+        console.log("delete user_in_charge is ERROR!!")
+        throw error
+    }
+}
+
+export const deleteUser_in_charge = async (id: any) => {
+    try {
+        return await prisma.user_in_charge.deleteMany({
+            where: {idproject: id}
+        })
+        
+    } catch (error) {
+        console.log("delete user_in_charge is ERROR!!")
+        throw error
+    }
+}
 
 export const createFolder = async (name: string, username: string) => {
     let dirname: string = name + '_' + username
-    const uploadDir = path.join(__dirname, '../project_path' , dirname)
-    fs.mkdirSync(uploadDir);
+    const uploadDir1 = path.join(__dirname, '../project_path' , dirname, 'images')
+    const uploadDir2 = path.join(__dirname, '../project_path' , dirname, 'thumbs')
+    fs.mkdirSync(uploadDir1, { recursive: true });
+    fs.mkdirSync(uploadDir2, { recursive: true });
     
-    return uploadDir as string
+    return dirname as string
 
 }
 
-export const createDetectionFolder = async (dir: string) => {
-    let pathDir = path.join(dir, 'detection', 'images')
-    fs.mkdirSync(pathDir, { recursive: true });
-    
-    return pathDir
-
+export const deleteFolder = async (dir: string) => {
+    const projectPath = path.join(__dirname, '../project_path', dir)
+    const projectPathIM = path.join(__dirname, '../project_path', dir, 'images')
+    const projectPathTH = path.join(__dirname, '../project_path', dir, 'thumbs')
+    try {
+        if (fs.existsSync(projectPath)) {
+            fs.readdirSync(projectPathIM).forEach((file) => {
+                const filePath = path.join(projectPathIM, file);
+                fs.unlinkSync(filePath);
+            })
+            fs.readdirSync(projectPathTH).forEach((file) => {
+                const filePath = path.join(projectPathTH, file);
+                fs.unlinkSync(filePath);
+            })
+            fs.rmdirSync(projectPathIM);
+            fs.rmdirSync(projectPathTH);
+            fs.rmdirSync(projectPath);
+        }
+        console.log(`Folder ${dir} deleted successfully.`);
+            return true;
+        
+    } catch (error) {
+        console.log("delete folder is ERROR!!")
+        throw error
+    }
 }
+
+
+

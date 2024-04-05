@@ -15,6 +15,7 @@ app.use(session({
   saveUninitialized: true
 }));
 
+app.use('/img', express.static('project_path'))
 app.use(cors({ origin: `${process.env.ORIGIN_URL}`, credentials: true}))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))

@@ -37,30 +37,6 @@ export const createProject = async (req: Request, res: Response) => {
     }
 }
 
-export const createDetection = async (req: Request, res: Response) => {
-    try {
-        const idproject = parseInt(req.body.idproject)
-        const project = await projectModel.getprojectById(idproject)
-        const create = await projectModel.createDetectionFolder(project?.root_path as string)
-
-        if(!create) {
-            return res.status(500).json({ 
-                type: 'failed',
-                message: 'สร้าง project detection ล้มเหลว', 
-            })
-        }
-
-        return res.status(200).json({
-            type: 'success',
-            message: 'สร้าง project detection สำเร็จ',
-            create
-        })
-        
-    } catch (error) {
-        console.error('error:', error);
-        return res.status(500).json({ error: 'create detection project ERROR!!' })
-    }
-}
 
 export const createShareProject = async (req: Request, res: Response) => {
     const idproject = parseInt(req.body.idproject)
@@ -104,7 +80,6 @@ export const getAllproject = async (req: Request, res: Response) => {
             type: 'success',
             message: 'get project สำเร็จ',
             project,
-            
         })
             
     } catch (error) {
@@ -168,11 +143,41 @@ export const getShareproject = async (req: Request, res: Response) => {
     
 } 
 
+export const deleteProject = async (req: Request, res: Response) => {
+    try {
+        const idproject = parseInt(req.body.idproject)
+        const data_project = await projectModel.getprojectById(idproject)
+        const delUser_in_charge = projectModel.deleteUser_in_charge(idproject)
+        const delproject = projectModel.deleteProject(idproject)
+
+        const dir = data_project?.root_path as string
+        const delFolder = projectModel.deleteFolder(dir)
+
+        if(!delUser_in_charge || !delproject) {
+            return res.status(400).json({ 
+                type: 'failed',
+                message: 'delete project ล้มเหลว', 
+            })
+        }
+
+        return res.status(200).json({
+            type: 'success',
+            message: 'get share project สำเร็จ',
+            delUser_in_charge,
+            delproject,
+            delFolder,
+            
+        })
+        
+    } catch (error) {
+        
+    }
+}
+
 export const uploadImage = async (req: Request, res: Response) => {
     try {
         const files = req.files as Express.Multer.File[]
         const idproject = parseInt(req.body.idproject)
-        const type = req.body.type
         
         if (!files || files.length === 0) {
             return res.status(400).json({ 
@@ -183,7 +188,7 @@ export const uploadImage = async (req: Request, res: Response) => {
         const data_project = await projectModel.getprojectById(idproject)
         const dir = data_project?.root_path as string
         
-        const ress = imageModel.saveImage(dir, type, files)
+        const ress = imageModel.saveImage(dir, files)
 
         if(!ress){
             return res.status(400).json({
@@ -200,4 +205,32 @@ export const uploadImage = async (req: Request, res: Response) => {
         return res.status(400).json({ error: 'upload image ERROR!!' })
     }
     
+}
+
+export const pullImage = async (req: Request, res: Response) => {
+    try {
+        const idproject = parseInt(req.body.idproject)
+        const data_project = await projectModel.getprojectById(idproject)
+        const dir = data_project?.root_path as string
+
+        const imageFile = await imageModel.pullallImage(dir)
+
+        if(!imageFile) {
+            return res.status(400).json({ 
+                type: 'failed',
+                message: 'get images ล้มเหลว', 
+            })
+        }
+
+        return res.status(200).json({
+            type: 'success',
+            message: 'get images สำเร็จ',
+            imageFile,
+            
+        })
+        
+    } catch (error) {
+        console.error('error:', error);
+        return res.status(400).json({ error: 'pull images ERROR!!' })
+    }
 }

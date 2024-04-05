@@ -12,6 +12,7 @@ router.post('/shareProject', check.checkAuth, projectController.createShareProje
 router.get('/allProject/share', check.checkAuth, projectController.getShareproject)
 router.post('/uploadImage', check.checkAuth, upload.array('image'), projectController.uploadImage)
 router.get('/project/:id', projectController.getprojectById )
-router.post('/create/detection', check.checkAuth, projectController.createDetection)
+router.get('/images/pull', check.checkAuth, projectController.pullImage)
+router.delete('/delete/project', check.checkAuth, projectController.deleteProject)
 
 export default router
