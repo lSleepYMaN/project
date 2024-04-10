@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import userRoutes from './routes/userRoute'
 import projectRoutes from './routes/projectRoute'
+import detectionRoutes from './routes/detectionRoute'
 import session from 'express-session'
 import dotenv from 'dotenv'
 const cookie = require('cookie-parser')
@@ -20,7 +21,7 @@ app.use(cors({ origin: `${process.env.ORIGIN_URL}`, credentials: true}))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookie())
-app.use(userRoutes, projectRoutes)
+app.use(userRoutes, projectRoutes, detectionRoutes)
 
 
 app.listen(5000, () => {

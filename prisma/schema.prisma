@@ -71,7 +71,7 @@ model detection {
 model detection_class {
   class_id     Int            @id @default(autoincrement())
   class_label  String         @db.VarChar(45)
-  create_at    DateTime?      @db.DateTime(0)
+  created_at   DateTime?      @db.DateTime(0)
   updated_at   DateTime?      @db.DateTime(0)
   idproject    Int
   bounding_box bounding_box[]
