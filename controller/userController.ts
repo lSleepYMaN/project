@@ -56,21 +56,24 @@ export const registerUser = async (req: Request, res: Response) => {
     if(!validUsername){
         return res.status(400).json({
             type: 'failed',
-            message:'Username ไม่ตรงตามเงื่อนไข',
+            Attribute: 'username',
+            message:'ชื่อผู้ใช้ไม่ถูกต้อง',
         })
     }
 
     if (!validEmail) {
         return res.status(400).json({ 
             type: 'failed',
-            message: 'Email ไม่ถูกต้อง',
+            Attribute: 'email',
+            message: 'อีเมลล์ไม่ถูกต้อง',
         })
     }
 
     if (!validPass) {
         return res.status(400).json({ 
             type: 'failed',
-            message: 'Password ไม่ตรงตามเงื่อนไข',
+            Attribute: 'password',
+            message: 'รหัสผ่านไม่ถูกต้อง',
         })
     }
 
