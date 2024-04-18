@@ -83,7 +83,8 @@ export const registerUser = async (req: Request, res: Response) => {
         if (checkUser) {
             return res.status(400).json({ 
                 type: 'failed',
-                message: 'Username ถูกใช้งานแล้ว', 
+                Attribute: 'username',
+                message: 'ชื่อผู้ใช้ถูกใช้งานแล้ว', 
             })
         }
 
@@ -92,14 +93,16 @@ export const registerUser = async (req: Request, res: Response) => {
         if (checkEmail) {
             return res.status(400).json({ 
                 type: 'failed',
-                message: 'Email ถูกใช้งานแล้ว',
+                Attribute: 'email',
+                message: 'อีเมลล์ถูกใช้งานแล้ว',
             })
         }
 
         if (conPassword != password){
             return res.status(400).json({ 
                 type: 'failed',
-                message: 'Password ไม่ตรงกัน',
+                Attribute: 'password',
+                message: 'รหัสผ่านไม่สอดคล้องกัน',
             })
         }
 
@@ -183,7 +186,8 @@ export const loginUser = async (req: Request, res: Response) => {
         if (!findUser) {
             return res.status(400).json({
                 type: 'failed',
-                message: 'Username หรือ Password ไม่ถูกต้อง',
+                Attribute: 'username',
+                message: 'ชื่อผู้ใช้ไม่ถูกต้อง',
             })
         }
 
@@ -199,6 +203,7 @@ export const loginUser = async (req: Request, res: Response) => {
         if (!compare) {
             return res.status(400).json({
                 type: 'failed',
+                Attribute: 'password',
                 message: 'Password ไม่ถูกต้อง',
              })
         } else {
