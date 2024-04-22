@@ -1,16 +1,18 @@
 import { Request, Response } from "express"
+const jwt = require('jsonwebtoken')
 
 export const checkAuth = (req: Request, res: Response, next: Function) => {
     try {
        // const authHeader = req.headers['authorization']
-       const token = req.cookies.token
+        const token = req.cookies.token
+        const user = jwt.verify(token, process.env.SECRET as string)
 
-        if(token){
-            console.log('have token')
+        if(user.id){
+            console.log('authorize')
             return next()
         }
         else{
-            console.log('no token')
+            console.log('no id')
             return res.status(200).json({
                 type: 'error',
                 message: 'กรุณา login',
@@ -19,7 +21,11 @@ export const checkAuth = (req: Request, res: Response, next: Function) => {
 
     } catch (error) {
         console.error('error:', error);
-        return res.status(500).json({ error: 'failed' })
+        return res.status(500).json({ 
+            error: 'failed',
+            type: 'error',
+            message: 'กรุณา login', 
+        })
     }
 }
 
