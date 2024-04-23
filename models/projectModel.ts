@@ -5,15 +5,32 @@ import path from "path";
 
 const prisma = new PrismaClient()
 
-export const createProject = async (projectName: string, projectDes: string, dir: string) => {
+export const createProject = async (projectName: string, projectDes: string) => {
     try {
         return await prisma.project.create({
             data:{
                 project_name: projectName,
                 description: projectDes,
-                root_path: dir,
+                root_path: "-",
                 created_at: new Date(new Date().getTime()+(7*60*60*1000)),
                 updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
+            }
+        })
+        
+    } catch (error) {
+        console.log("create project is ERROR!!")
+        throw error
+    }
+}
+
+export const root_pathUP = async (idproject: any) => {
+    try {
+        return await prisma.project.update({
+            where: {
+                idproject: idproject,
+            },
+            data: {
+                root_path: idproject.toString(),
             }
         })
         
@@ -93,9 +110,17 @@ export const getAllprojectByname = async (id: any, name: string, status: any) =>
 
 export const deleteProject = async (id: any) => {
     try {
-        return await prisma.project.delete({
+        await prisma.detection.deleteMany({
             where: {idproject: id}
         })
+        await prisma.detection_class.deleteMany({
+            where: {idproject: id}
+        })
+        await prisma.project.delete({
+            where: {idproject: id}
+        })
+
+        return true
         
     } catch (error) {
         console.log("delete user_in_charge is ERROR!!")
@@ -115,8 +140,8 @@ export const deleteUser_in_charge = async (id: any) => {
     }
 }
 
-export const createFolder = async (name: string, username: string) => {
-    let dirname: string = name + '_' + username
+export const createFolder = async (idproject: any) => {
+    let dirname: string = idproject.toString()
     const uploadDir1 = path.join(__dirname, '../project_path' , dirname, 'images')
     const uploadDir2 = path.join(__dirname, '../project_path' , dirname, 'thumbs')
     fs.mkdirSync(uploadDir1, { recursive: true });

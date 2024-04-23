@@ -2,6 +2,7 @@ import { Request, Response } from "express"
 import * as projectModel from '../models/projectModel'
 import * as userModel from '../models/userModel'
 import * as imageModel from '../models/imageModel'
+import * as detectionModel from '../models/detectionModel'
 const jwt = require('jsonwebtoken')
 
 export const createProject = async (req: Request, res: Response) => {
@@ -15,8 +16,10 @@ export const createProject = async (req: Request, res: Response) => {
         if (checkName[0]) {
             return res.status(500).json({ error: 'This name is already in use.' })
         }
-        const dir = await projectModel.createFolder(project_name, user.username)
-        const create = await projectModel.createProject(project_name, description, dir)
+        
+        const create = await projectModel.createProject(project_name, description)
+        const update = await projectModel.root_pathUP(create.idproject)
+        const dir = await projectModel.createFolder(create.idproject)
         const userin = await projectModel.user_in_charge(user.id, create.idproject, 1)
         if(!userin) {
             return res.status(500).json({ 
@@ -178,6 +181,7 @@ export const uploadImage = async (req: Request, res: Response) => {
     try {
         const files = req.files as Express.Multer.File[]
         const idproject = parseInt(req.body.idproject)
+        const type = req.body.type as string
         
         if (!files || files.length === 0) {
             return res.status(400).json({ 
@@ -185,11 +189,9 @@ export const uploadImage = async (req: Request, res: Response) => {
                 message: 'No image uploaded'
             })
         }
-        const data_project = await projectModel.getprojectById(idproject)
-        const dir = data_project?.root_path as string
         
-        const ress = imageModel.saveImage(dir, files)
-
+        const ress = await imageModel.saveImage(idproject, files, type)
+        
         if(!ress){
             return res.status(400).json({
                 type: 'failed',

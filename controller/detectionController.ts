@@ -66,40 +66,25 @@ export const createBounding_box = async (req: Request, res: Response) => {
         const token = req.cookies.token
         const user = jwt.verify(token, process.env.SECRET as string)
         const idproject = parseInt(req.body.idproject)
+        const iddetection = parseInt(req.body.iddetection)
         const imageName = req.body.imageName as string
         const bounding_box = req.body.bounding_box
         const data_project = await projectModel.getprojectById(idproject)
         const dir = data_project?.root_path as string
-        const checkData = await detectionModel.getDetection(imageName, idproject)
         let length = bounding_box.length
-        console.log(checkData)
         
-        if (checkData.length == 0) {
-            const create = await detectionModel.createDetection(dir, imageName, idproject) 
-            for(let i = 0; i < length; i++){
-               const saveBounding_box = await detectionModel.createBounding_box(bounding_box[i].x1,bounding_box[i].x2
-                                                                                ,bounding_box[i].y1,bounding_box[i].y2
-                                                                                ,create.iddetection,bounding_box[i].class_id
-                                                                                ,user.id) 
+        for(let i = 0; i < length; i++){
+            const saveBounding_box = await detectionModel.createBounding_box(bounding_box[i].x1,bounding_box[i].x2
+                                                                                 ,bounding_box[i].y1,bounding_box[i].y2
+                                                                                 ,iddetection,bounding_box[i].class_id
+                                                                                 ,user.id) 
             }
             return res.status(200).json({
                 type: 'success',
                 message: 'สร้าง bounding box สำเร็จ',
-            })
-            
-        } else {
-            for(let i = 0; i < length; i++){
-                const saveBounding_box = await detectionModel.createBounding_box(bounding_box[i].x1,bounding_box[i].x2
-                                                                                 ,bounding_box[i].y1,bounding_box[i].y2
-                                                                                 ,checkData[0].iddetection,bounding_box[i].class_id
-                                                                                 ,user.id) 
-             }
-             return res.status(200).json({
-                 type: 'success',
-                 message: 'สร้าง bounding box สำเร็จ',
 
-             })
-        }
+         })
+        
 
     } catch (error) {
         console.error('error:', error);

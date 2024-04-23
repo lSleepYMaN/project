@@ -97,23 +97,26 @@ export const getBounding_box = async (iddetection: any) => {
     }
 }
 
-export const createDetection = async (dir: string, imageName: string, idproject: any) => {
+export const createDetection = async ( imageName: any[], idproject: any) => {
     try {
-        let imagePath = path.join(__dirname, '../project_path', dir, 'images', imageName)
-        const metadata = await sharp(imagePath).metadata()
-        const width = metadata.width
-        const height = metadata.height
+        for (let i = 0; i < imageName.length; i++) {
+            let imagePath = path.join(__dirname, '../project_path', idproject.toString(), 'images', imageName[i])
+            const metadata = await sharp(imagePath).metadata()
+            const width = metadata.width
+            const height = metadata.height
 
-        return await prisma.detection.create({
-            data: {
-                image_path: imageName,
-                height_image: height,
-                width_image: width,
-                created_at: new Date(new Date().getTime()+(7*60*60*1000)),
-                updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
-                idproject: idproject,
-            }
-        })
+            await prisma.detection.create({
+                data: {
+                    image_path: imageName[i],
+                    height_image: height,
+                    width_image: width,
+                    created_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                    updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                    idproject: idproject,
+                }
+            })   
+        }
+        
         
     } catch (error) {
         console.log("create detection ERROR!!")
