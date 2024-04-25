@@ -150,8 +150,23 @@ export const deleteProject = async (req: Request, res: Response) => {
     try {
         const idproject = parseInt(req.body.idproject)
         const data_project = await projectModel.getprojectById(idproject)
-        const delUser_in_charge = projectModel.deleteUser_in_charge(idproject)
-        const delproject = projectModel.deleteProject(idproject)
+        if (data_project == null) {
+            return res.status(400).json({ 
+                type: 'failed',
+                message: 'ไม่พบ project ที่ต้องการลบในระบบ', 
+            })
+        }
+        const delUser_in_charge = await projectModel.deleteUser_in_charge(idproject)
+        const getdetection = await detectionModel.getAllDetection(idproject)
+        for(let i = 0; i < getdetection.length; i++){
+            const getBounding_box = await detectionModel.getBounding_box(getdetection[i].iddetection)
+            if (getBounding_box.length != 0) {
+                await detectionModel.delBounding_box_by_detection(getdetection[i].iddetection)
+            }
+            
+        }
+        
+        const delproject = await projectModel.deleteProject(idproject)
 
         const dir = data_project?.root_path as string
         const delFolder = projectModel.deleteFolder(dir)
@@ -165,10 +180,7 @@ export const deleteProject = async (req: Request, res: Response) => {
 
         return res.status(200).json({
             type: 'success',
-            message: 'get share project สำเร็จ',
-            delUser_in_charge,
-            delproject,
-            delFolder,
+            message: 'delete project สำเร็จ',
             
         })
         
@@ -207,32 +219,4 @@ export const uploadImage = async (req: Request, res: Response) => {
         return res.status(400).json({ error: 'upload image ERROR!!' })
     }
     
-}
-
-export const pullImage = async (req: Request, res: Response) => {
-    try {
-        const idproject = parseInt(req.body.idproject)
-        const data_project = await projectModel.getprojectById(idproject)
-        const dir = data_project?.root_path as string
-
-        const imageFile = await imageModel.pullallImage(dir)
-
-        if(!imageFile) {
-            return res.status(400).json({ 
-                type: 'failed',
-                message: 'get images ล้มเหลว', 
-            })
-        }
-
-        return res.status(200).json({
-            type: 'success',
-            message: 'get images สำเร็จ',
-            imageFile,
-            
-        })
-        
-    } catch (error) {
-        console.error('error:', error);
-        return res.status(400).json({ error: 'pull images ERROR!!' })
-    }
 }

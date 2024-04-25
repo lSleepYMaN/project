@@ -5,9 +5,13 @@ const router = express.Router()
 
 router.post('/create/detection/label', check.checkAuth, detectionController.createDetectionClass)
 router.post('/create/detection/bounding_box', check.checkAuth, detectionController.createBounding_box)
+
 router.get('/detection/class', check.checkAuth, detectionController.getAllClass)
 router.get('/detection/bounding_box', check.checkAuth, detectionController.getBounding_box)
+router.get('/detection/allDetection', check.checkAuth, detectionController.getAllDetection)
+
 router.put('/update/detection/bounding_box', check.checkAuth, detectionController.updateBounding_box)
+
 router.delete('/delete/detection/bounding_box', check.checkAuth, detectionController.delBounding_box)
 
 export default router

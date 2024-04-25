@@ -74,6 +74,24 @@ export const getDetection = async (imageName: string, idproject: any) => {
     }
 }
 
+export const getAllDetection = async (idproject: any) => {
+    try {
+        return await prisma.detection.findMany({
+            where: {idproject: idproject},
+            select: {
+                iddetection: true,
+                image_path: true,
+                height_image: true,
+                width_image: true,
+            }
+        })
+        
+    } catch (error) {
+        console.log("get detection ERROR!!")
+        throw error
+    }
+}
+
 export const getBounding_box = async (iddetection: any) => {
     try {
         return await prisma.bounding_box.findMany({
@@ -93,6 +111,18 @@ export const getBounding_box = async (iddetection: any) => {
         
     } catch (error) {
         console.log("get bounding_box ERROR!!")
+        throw error
+    }
+}
+
+export const getBounding_box_by_id = async (idbounding_box: any) => {
+    try {
+        return await prisma.bounding_box.findUnique({
+            where: {idbounding_box: idbounding_box}
+        })
+        
+    } catch (error) {
+        console.log("get bounding_box by id ERROR!!")
         throw error
     }
 }
@@ -172,13 +202,23 @@ export const updateBounding_box = async (idbounding_box: any, x1: any, x2: any, 
 
 export const delBounding_box = async (idbounding_box: any) => {
     try {
-        await prisma.bounding_box.delete({
+        return await prisma.bounding_box.delete({
             where: {
                 idbounding_box: idbounding_box
             }
         })
+        
+    } catch (error) {
+        console.log("delete bounding box ERROR!!")
+        throw error
+    }
+}
 
-        return true
+export const delBounding_box_by_detection = async (iddetection: any) => {
+    try {
+        return await prisma.bounding_box.deleteMany({
+            where: {iddetection: iddetection}
+        })
         
     } catch (error) {
         console.log("delete bounding box ERROR!!")

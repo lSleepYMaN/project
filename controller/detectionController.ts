@@ -61,16 +61,36 @@ export const getAllClass = async (req: Request, res: Response) => {
     }
 }
 
+export const getAllDetection = async (req: Request, res: Response) => {
+    try {
+        const idproject = parseInt(req.body.idproject)
+        const detection = await detectionModel.getAllDetection(idproject)
+
+        if(!detection) {
+            return res.status(500).json({ 
+                type: 'failed',
+                message: 'get all label ล้มเหลว', 
+            })
+        }
+
+        return res.status(200).json({
+            type: 'success',
+            message: 'get all label สำเร็จ',
+            detection,
+        })
+        
+    } catch (error) {
+        console.error('error:', error);
+        return res.status(500).json({ error: 'get all detection ERROR!!' })
+    }
+}
+
 export const createBounding_box = async (req: Request, res: Response) => {
     try {
         const token = req.cookies.token
         const user = jwt.verify(token, process.env.SECRET as string)
-        const idproject = parseInt(req.body.idproject)
         const iddetection = parseInt(req.body.iddetection)
-        const imageName = req.body.imageName as string
         const bounding_box = req.body.bounding_box
-        const data_project = await projectModel.getprojectById(idproject)
-        const dir = data_project?.root_path as string
         let length = bounding_box.length
         
         for(let i = 0; i < length; i++){
@@ -94,24 +114,20 @@ export const createBounding_box = async (req: Request, res: Response) => {
 
 export const getBounding_box = async (req: Request, res: Response) => {
     try {
-        const idproject = parseInt(req.body.idproject)
-        const imageName = req.body.imageName as string
-        const checkData = await detectionModel.getDetection(imageName, idproject)
+        const iddetection = parseInt(req.body.iddetection)
+        const data = await detectionModel.getBounding_box(iddetection)
 
-        if (checkData.length == 0) {
+        if (data.length == 0) {
             return res.status(200).json({
                 type: 'failed',
                 message: 'ไม่มี bounding box ในรูปภาพนี้',
 
             })
         }
-
-        const data = await detectionModel.getBounding_box(checkData[0].iddetection)
-
         return res.status(200).json({
             type: 'success',
             message: 'get bounding box สำเร็จ',
-            detection: checkData,
+            detection: iddetection,
             bounding_box: data,
         })
         
@@ -149,15 +165,28 @@ export const updateBounding_box = async (req: Request, res: Response) => {
 
 export const delBounding_box = async (req: Request, res: Response) => {
     try {
-        const idbounding_box = parseInt(req.body.idbounding_box)
-        const del = detectionModel.delBounding_box(idbounding_box)
+        const idbounding_box = req.body.idbounding_box
+        
+        for(let i = 0; i < idbounding_box.length; i++){
+            const data = await detectionModel.getBounding_box_by_id(idbounding_box[i])
+            if (data == null) {
+                return res.status(200).json({
+                    type: 'failed',
+                    idbounding_box: idbounding_box[i],
+                    message: 'bounding box ไม่มีในระบบ',
 
-        if (!del) {
-            return res.status(200).json({
-                type: 'failed',
-                message: 'delete bounding box ไม่สำเร็จ',
+                })
+            }
+            const del = await detectionModel.delBounding_box(idbounding_box[i]) 
+            console.log(del)
+            if (!del) {
+                return res.status(200).json({
+                    type: 'failed',
+                    idbounding_box: idbounding_box[i],
+                    message: 'delete bounding box ไม่สำเร็จ',
 
-            })
+                })
+            }
         }
 
         return res.status(200).json({

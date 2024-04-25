@@ -2,7 +2,6 @@ import { Request, Response } from "express"
 import * as userModel from '../models/userModel'
 import bcrypt from 'bcryptjs'
 import * as sendEmail from '../utils/sendEmail'
-import { isNull } from "util"
 const jwt = require('jsonwebtoken')
 
 export const getAllUsers = async (req: Request, res: Response) => {

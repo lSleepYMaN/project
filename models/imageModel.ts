@@ -47,17 +47,3 @@ export const saveImage = async (idproject: any, images: Express.Multer.File[], t
     }
     
 }
-
-export const pullallImage = async (dir: string) => {
-    try {
-        const filePath = path.join(__dirname, '../project_path', dir, 'images')
-        const imageFile = fs.readdirSync(filePath)
-
-        return imageFile
-        
-    } catch (error) {
-        console.error('get image ERROR!!:', error);
-        return false;
-    }
-
-}
