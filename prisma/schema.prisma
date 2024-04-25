@@ -154,7 +154,7 @@ model segmentation_class {
   class_id    Int       @id @default(autoincrement())
   class_label String    @db.VarChar(45)
   created_at  DateTime? @db.DateTime(0)
-  update_at   DateTime? @db.DateTime(0)
+  updated_at  DateTime? @db.DateTime(0)
   idproject   Int
   polygon     polygon[]
   project     project   @relation(fields: [idproject], references: [idproject], onDelete: NoAction, onUpdate: NoAction, map: "fk_segmentation_class_project1")

@@ -3,6 +3,7 @@ import * as projectModel from '../models/projectModel'
 import * as userModel from '../models/userModel'
 import * as imageModel from '../models/imageModel'
 import * as detectionModel from '../models/detectionModel'
+import * as segmentationModel from '../models/segmentationModel'
 const jwt = require('jsonwebtoken')
 
 export const createProject = async (req: Request, res: Response) => {
@@ -158,10 +159,19 @@ export const deleteProject = async (req: Request, res: Response) => {
         }
         const delUser_in_charge = await projectModel.deleteUser_in_charge(idproject)
         const getdetection = await detectionModel.getAllDetection(idproject)
+        const getsegmentation = await segmentationModel.getAllSegmentation(idproject)
         for(let i = 0; i < getdetection.length; i++){
             const getBounding_box = await detectionModel.getBounding_box(getdetection[i].iddetection)
             if (getBounding_box.length != 0) {
                 await detectionModel.delBounding_box_by_detection(getdetection[i].iddetection)
+            }
+            
+        }
+
+        for(let i = 0; i < getsegmentation.length; i++){
+            const getPolygon = await segmentationModel.getPolygon(getsegmentation[i].idsegmentation)
+            if (getPolygon.length != 0) {
+                await segmentationModel.delPolygon_by_segmentation(getsegmentation[i].idsegmentation)
             }
             
         }

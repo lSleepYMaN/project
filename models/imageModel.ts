@@ -36,6 +36,23 @@ export const saveImage = async (idproject: any, images: Express.Multer.File[], t
                     }
                 })
             }
+
+            if (type == 'segmentation') {
+                const metadata = await sharp(image.buffer).metadata()
+                const width = metadata.width
+                const height = metadata.height
+
+                await prisma.segmentation.create({
+                    data: {
+                        image_path: fileName,
+                        height_image: height,
+                        width_image: width,
+                        created_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                        updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                        idproject: idproject,
+                    }
+                })
+            }
             
         }
 

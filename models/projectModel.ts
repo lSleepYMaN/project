@@ -116,6 +116,12 @@ export const deleteProject = async (id: any) => {
         await prisma.detection_class.deleteMany({
             where: {idproject: id}
         })
+        await prisma.segmentation.deleteMany({
+            where: {idproject: id}
+        })
+        await prisma.segmentation_class.deleteMany({
+            where: {idproject: id}
+        })
         await prisma.project.delete({
             where: {idproject: id}
         })
