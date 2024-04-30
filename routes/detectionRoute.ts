@@ -8,7 +8,7 @@ router.post('/create/detection/bounding_box', check.checkAuth, detectionControll
 
 router.get('/detection/class', check.checkAuth, detectionController.getAllClass)
 router.get('/detection/bounding_box', check.checkAuth, detectionController.getBounding_box)
-router.get('/detection/allDetection', check.checkAuth, detectionController.getAllDetection)
+router.get('/detection/allDetection/:idproject', check.checkAuth, detectionController.getAllDetection)
 
 router.put('/update/detection/bounding_box', check.checkAuth, detectionController.updateBounding_box)
 

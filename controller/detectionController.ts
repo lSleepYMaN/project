@@ -63,7 +63,7 @@ export const getAllClass = async (req: Request, res: Response) => {
 
 export const getAllDetection = async (req: Request, res: Response) => {
     try {
-        const idproject = parseInt(req.body.idproject)
+        const idproject = parseInt(req.params.idproject)
         const detection = await detectionModel.getAllDetection(idproject)
 
         if(!detection) {
