@@ -211,6 +211,13 @@ export const uploadImage = async (req: Request, res: Response) => {
                 message: 'No image uploaded'
             })
         }
+
+        if (type == null) {
+            return res.status(400).json({ 
+                type: 'failed',
+                message: 'ไม่สามารถระบุรูปแบบการเซฟได้'
+            })
+        }
         
         const ress = await imageModel.saveImage(idproject, files, type)
         
