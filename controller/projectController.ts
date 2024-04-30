@@ -4,6 +4,7 @@ import * as userModel from '../models/userModel'
 import * as imageModel from '../models/imageModel'
 import * as detectionModel from '../models/detectionModel'
 import * as segmentationModel from '../models/segmentationModel'
+import path from "path";
 const jwt = require('jsonwebtoken')
 
 export const createProject = async (req: Request, res: Response) => {
@@ -236,4 +237,16 @@ export const uploadImage = async (req: Request, res: Response) => {
         return res.status(400).json({ error: 'upload image ERROR!!' })
     }
     
+}
+
+export const getImg = async (req: Request, res:Response) => {
+    try {
+        const idproject = req.body.idproject
+        const Imgname = req.body.imgname
+        res.sendFile(path.join(__dirname, '../project_path', idproject, 'images', Imgname));
+        
+    } catch (error) {
+        console.error('error:', error);
+        return res.status(500).json({ error: 'get Img ERROR!!' })
+    }
 }
