@@ -154,8 +154,36 @@ export const createDetection = async ( imageName: any[], idproject: any) => {
     }
 }
 
-export const createBounding_box = async (x1: any, x2: any, y1: any, y2: any, iddetection: any, detection_class_id: any, user_id: any) => {
+export const createBounding_box = async (x1: any, x2: any, y1: any, y2: any, iddetection: any, detection_class_label: any, user_id: any, idproject: any) => {
     try {
+        const check_label = await prisma.detection_class.findMany({
+            where: {
+                AND: [{idproject: idproject}, {class_label: detection_class_label}]
+            }
+        })
+        if (check_label.length != 0) {
+            return await prisma.bounding_box.create({
+                data: {
+                    x1: x1,
+                    x2: x2,
+                    y1: y1,
+                    y2: y2,
+                    created_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                    updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                    iddetection: iddetection,
+                    detection_class_id: check_label[0]?.class_id,
+                    user_id: user_id
+                }
+            })
+        }
+        const create_label =  await prisma.detection_class.create({
+            data: {
+                class_label: detection_class_label,
+                created_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                idproject: idproject,
+            }
+        })
         return await prisma.bounding_box.create({
             data: {
                 x1: x1,
@@ -165,7 +193,7 @@ export const createBounding_box = async (x1: any, x2: any, y1: any, y2: any, idd
                 created_at: new Date(new Date().getTime()+(7*60*60*1000)),
                 updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
                 iddetection: iddetection,
-                detection_class_id: detection_class_id,
+                detection_class_id: create_label?.class_id,
                 user_id: user_id
             }
         })

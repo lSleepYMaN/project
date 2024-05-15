@@ -89,15 +89,15 @@ export const createBounding_box = async (req: Request, res: Response) => {
     try {
         const token = req.cookies.token
         const user = jwt.verify(token, process.env.SECRET as string)
+        const idproject = parseInt(req.body.idproject)
         const iddetection = parseInt(req.body.iddetection)
         const bounding_box = req.body.bounding_box
         let length = bounding_box.length
-        
         for(let i = 0; i < length; i++){
             const saveBounding_box = await detectionModel.createBounding_box(bounding_box[i].x1,bounding_box[i].x2
                                                                                  ,bounding_box[i].y1,bounding_box[i].y2
-                                                                                 ,iddetection,bounding_box[i].class_id
-                                                                                 ,user.id) 
+                                                                                 ,iddetection,bounding_box[i].class_label
+                                                                                 ,user.id,idproject) 
             }
             return res.status(200).json({
                 type: 'success',
@@ -108,7 +108,7 @@ export const createBounding_box = async (req: Request, res: Response) => {
 
     } catch (error) {
         console.error('error:', error);
-        return res.status(500).json({ error: 'create bounding box ERROR!!' })
+        return res.status(500).json({ error: 'create bounding box ERROR!!!' })
     }
 } 
 
