@@ -61,6 +61,28 @@ export const getAllClass = async (req: Request, res: Response) => {
     }
 }
 
+export const getClass = async (req: Request, res: Response) => {
+    try {
+        const class_id = parseInt(req.params.class_id)
+        const label = await detectionModel.getLabelByID(class_id)
+        if(!label) {
+            return res.status(500).json({ 
+                type: 'failed',
+                message: 'get label ล้มเหลว', 
+            })
+        }
+
+        return res.status(200).json({
+            type: 'success',
+            message: 'get label สำเร็จ',
+            label,
+        })
+    } catch (error) {
+        console.error('error:', error);
+        return res.status(500).json({ error: 'get detection class ERROR!!!' })
+    }
+}
+
 export const getAllDetection = async (req: Request, res: Response) => {
     try {
         const idproject = parseInt(req.params.idproject)
@@ -93,6 +115,7 @@ export const createBounding_box = async (req: Request, res: Response) => {
         const iddetection = parseInt(req.body.iddetection)
         const bounding_box = req.body.bounding_box
         let length = bounding_box.length
+        
         for(let i = 0; i < length; i++){
             const saveBounding_box = await detectionModel.createBounding_box(bounding_box[i].x1,bounding_box[i].x2
                                                                                  ,bounding_box[i].y1,bounding_box[i].y2
@@ -114,7 +137,7 @@ export const createBounding_box = async (req: Request, res: Response) => {
 
 export const getBounding_box = async (req: Request, res: Response) => {
     try {
-        const iddetection = parseInt(req.body.iddetection)
+        const iddetection = parseInt(req.params.iddetection)
         const data = await detectionModel.getBounding_box(iddetection)
 
         if (data.length == 0) {

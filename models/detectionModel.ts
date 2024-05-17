@@ -54,11 +54,27 @@ export const getAllLabel = async (idproject: any) => {
     }
 }
 
-export const getDetection = async (imageName: string, idproject: any) => {
+export const getLabelByID = async (class_id: any) => {
+    try {
+        return await prisma.detection_class.findMany({
+            where: {class_id},
+            select: {
+                class_id: true,
+                class_label: true,
+            }
+        })
+        
+    } catch (error) {
+        console.log("get label by id ERROR!!")
+        throw error
+    }
+}
+
+export const getDetection = async (iddetection: any) => {
     try {
         return await prisma.detection.findMany({
             where: {
-                AND: [{image_path: imageName}, {idproject: idproject}]
+                iddetection
             },
             select: {
                 iddetection: true,
@@ -94,9 +110,15 @@ export const getAllDetection = async (idproject: any) => {
 
 export const getBounding_box = async (iddetection: any) => {
     try {
-        return await prisma.bounding_box.findMany({
+        const whIMG = await prisma.detection.findUnique({
             where: {
-                iddetection : iddetection
+                iddetection
+            }
+        })
+
+        const boundingBoxes = await prisma.bounding_box.findMany({
+            where: {
+                iddetection: iddetection
             },
             select: {
                 idbounding_box: true,
@@ -107,7 +129,23 @@ export const getBounding_box = async (iddetection: any) => {
                 detection_class_id: true,
                 user_id: true,
             }
-        })
+        });
+
+        const modifiedBoundingBoxes = await Promise.all(boundingBoxes.map(async box => ({
+            idbounding_box: box.idbounding_box,
+            x1: Math.round(box.x1! * whIMG?.width_image!),
+            x2: Math.round(box.x2! * whIMG?.width_image!),
+            y1: Math.round(box.y1! * whIMG?.height_image!),
+            y2: Math.round(box.y2! * whIMG?.height_image!),
+            detection_class_id: box.detection_class_id,
+            label: await getLabelByID(box.detection_class_id),
+            width: Math.round(box.x2! * whIMG?.width_image!) - Math.round(box.x1! * whIMG?.width_image!),
+            height: Math.round(box.y2! * whIMG?.height_image!) - Math.round(box.y1! * whIMG?.height_image!),
+            user_id: box.user_id,
+        })));
+
+        return modifiedBoundingBoxes;
+
         
     } catch (error) {
         console.log("get bounding_box ERROR!!")
@@ -156,6 +194,10 @@ export const createDetection = async ( imageName: any[], idproject: any) => {
 
 export const createBounding_box = async (x1: any, x2: any, y1: any, y2: any, iddetection: any, detection_class_label: any, user_id: any, idproject: any) => {
     try {
+        const whIMG = await prisma.detection.findUnique({
+            where: {iddetection}
+        })
+
         const check_label = await prisma.detection_class.findMany({
             where: {
                 AND: [{idproject: idproject}, {class_label: detection_class_label}]
@@ -164,10 +206,10 @@ export const createBounding_box = async (x1: any, x2: any, y1: any, y2: any, idd
         if (check_label.length != 0) {
             return await prisma.bounding_box.create({
                 data: {
-                    x1: x1,
-                    x2: x2,
-                    y1: y1,
-                    y2: y2,
+                    x1: (x1/whIMG?.width_image!),
+                    x2: (x2/whIMG?.width_image!),
+                    y1: (y1/whIMG?.height_image!),
+                    y2: (y2/whIMG?.height_image!),
                     created_at: new Date(new Date().getTime()+(7*60*60*1000)),
                     updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
                     iddetection: iddetection,
@@ -186,10 +228,10 @@ export const createBounding_box = async (x1: any, x2: any, y1: any, y2: any, idd
         })
         return await prisma.bounding_box.create({
             data: {
-                x1: x1,
-                x2: x2,
-                y1: y1,
-                y2: y2,
+                x1: (x1/whIMG?.width_image!),
+                x2: (x2/whIMG?.width_image!),
+                y1: (y1/whIMG?.height_image!),
+                y2: (y2/whIMG?.height_image!),
                 created_at: new Date(new Date().getTime()+(7*60*60*1000)),
                 updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
                 iddetection: iddetection,

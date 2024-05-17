@@ -209,9 +209,9 @@ export const loginUser = async (req: Request, res: Response) => {
             await userModel.updateTimeUser(username)
             await userModel.updateStatusTo1(username)
 
-            const token = jwt.sign({id: findUser.id, username: findUser.username}, process.env.SECRET as string, { expiresIn: '24h'})
+            const token = jwt.sign({id: findUser.id, username: findUser.username}, process.env.SECRET as string, { expiresIn: '72h'})
             res.cookie('token', token, {
-                maxAge: 24*60*60*1000,
+                maxAge: 72*60*60*1000,
                 secure: true,
                 httpOnly: true,
                 sameSite: 'none',
