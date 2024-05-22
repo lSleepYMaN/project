@@ -139,6 +139,8 @@ export const getBounding_box = async (req: Request, res: Response) => {
     try {
         const iddetection = parseInt(req.params.iddetection)
         const data = await detectionModel.getBounding_box(iddetection)
+        const detection = await detectionModel.getDetection(iddetection)
+        let annotation = []
 
         if (data.length == 0) {
             return res.status(200).json({
@@ -147,11 +149,30 @@ export const getBounding_box = async (req: Request, res: Response) => {
 
             })
         }
+        for (let i = 0; i < data.length; i++) {
+            annotation.push(
+                {
+                    "id": `${data[i].idbounding_box}`,
+                    "type": "Annotation",
+                    "body": [
+                        {
+                            "type": "TextualBody",
+                            "value": data[i].label[0].class_label,
+                            "purpose": "tagging"
+                        }
+                    ],
+                    "target": {
+                        "selector": {
+                            "type": "FragmentSelector",
+                            "conformsTo": "http://www.w3.org/TR/media-frags/",
+                            "value": `xywh=pixel:${data[i].x1},${data[i].y1},${data[i].width},${data[i].height}`
+                        }
+                    }
+                }
+            )
+        }
         return res.status(200).json({
-            type: 'success',
-            message: 'get bounding box สำเร็จ',
-            detection: iddetection,
-            bounding_box: data,
+            annotation
         })
         
     } catch (error) {

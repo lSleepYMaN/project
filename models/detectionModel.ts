@@ -81,6 +81,7 @@ export const getDetection = async (iddetection: any) => {
                 image_path: true,
                 height_image: true,
                 width_image: true,
+                idproject: true
             }
         })
         
