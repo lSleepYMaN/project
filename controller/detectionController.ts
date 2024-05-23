@@ -114,19 +114,54 @@ export const createBounding_box = async (req: Request, res: Response) => {
         const idproject = parseInt(req.body.idproject)
         const iddetection = parseInt(req.body.iddetection)
         const bounding_box = req.body.bounding_box
-        let length = bounding_box.length
+        const check_bbox = await detectionModel.getBounding_box(iddetection)
         
-        for(let i = 0; i < length; i++){
-            const saveBounding_box = await detectionModel.createBounding_box(bounding_box[i].x1,bounding_box[i].x2
-                                                                                 ,bounding_box[i].y1,bounding_box[i].y2
-                                                                                 ,iddetection,bounding_box[i].class_label
-                                                                                 ,user.id,idproject) 
+        if (check_bbox.length == 0) {
+            for(let i = 0; i < bounding_box.length; i++){
+                const saveBounding_box = await detectionModel.createBounding_box(bounding_box[i].x1,bounding_box[i].x2
+                                                                                ,bounding_box[i].y1,bounding_box[i].y2
+                                                                                ,iddetection,bounding_box[i].class_label
+                                                                                ,user.id,idproject)
             }
-            return res.status(200).json({
-                type: 'success',
-                message: 'สร้าง bounding box สำเร็จ',
+        } else {
+            for(let i = 0; i < bounding_box.length; i++){
+                for (let j = 0; j < check_bbox.length; j++){
+                    if (bounding_box[i].id == check_bbox[j].idbounding_box) {
+    
+                        if (bounding_box[i].x1 != check_bbox[j].x1 || 
+                            bounding_box[i].y1 != check_bbox[j].y1 || 
+                            bounding_box[i].x2 != check_bbox[j].x2 || 
+                            bounding_box[i].y2 != check_bbox[j].y2 ||
+                            bounding_box[i].class_label != check_bbox[j].label[0].class_label) {
+    
+                            const updateBounding_box = await detectionModel.updateBounding_box(check_bbox[j].idbounding_box,bounding_box[i].x1,bounding_box[i].x2
+                                                                                                ,bounding_box[i].y1,bounding_box[i].y2,bounding_box[i].class_label
+                                                                                                ,user.id,iddetection,idproject)
+                            check_bbox.slice(j, 1)
+                            bounding_box.slice(i, 1)
+                        } else {
+                            check_bbox.slice(j, 1)
+                            bounding_box.slice(i, 1)
+                        }
+    
+                    }
+                }
+            }
+        }
+        for(let i = 0; i < bounding_box.length; i++){
+            const saveBounding_box = await detectionModel.createBounding_box(bounding_box[i].x1,bounding_box[i].x2
+                                                                            ,bounding_box[i].y1,bounding_box[i].y2
+                                                                            ,iddetection,bounding_box[i].class_label
+                                                                            ,user.id,idproject)
+        }
+        for(let i = 0; i < check_bbox.length; i++) {
+            await detectionModel.delBounding_box(check_bbox[i].idbounding_box)
+        }
+        return res.status(200).json({
+            type: 'success',
+            message: 'CRUD bounding box สำเร็จ',
 
-         })
+        })
         
 
     } catch (error) {
@@ -181,31 +216,31 @@ export const getBounding_box = async (req: Request, res: Response) => {
     }
 }
 
-export const updateBounding_box = async (req: Request, res: Response) => {
-    try {
-        const token = req.cookies.token
-        const user = jwt.verify(token, process.env.SECRET as string)
-        const bounding_box = req.body.bounding_box
-        let length = bounding_box.length
+// export const updateBounding_box = async (req: Request, res: Response) => {
+//     try {
+//         const token = req.cookies.token
+//         const user = jwt.verify(token, process.env.SECRET as string)
+//         const bounding_box = req.body.bounding_box
+//         let length = bounding_box.length
 
-        for(let i = 0; i < length; i++) {
-            const update = detectionModel.updateBounding_box(bounding_box[i].idbounding_box,bounding_box[i].x1
-                                                            ,bounding_box[i].x2,bounding_box[i].y1
-                                                            ,bounding_box[i].y2,bounding_box[i].class_id
-                                                            ,user.id
-                                                            )
-        }
-        return res.status(200).json({
-            type: 'success',
-            message: 'update bounding box สำเร็จ',
+//         for(let i = 0; i < length; i++) {
+//             const update = detectionModel.updateBounding_box(bounding_box[i].idbounding_box,bounding_box[i].x1
+//                                                             ,bounding_box[i].x2,bounding_box[i].y1
+//                                                             ,bounding_box[i].y2,bounding_box[i].class_id
+//                                                             ,user.id
+//                                                             )
+//         }
+//         return res.status(200).json({
+//             type: 'success',
+//             message: 'update bounding box สำเร็จ',
 
-        })
+//         })
         
-    } catch (error) {
-        console.error('error:', error);
-        return res.status(500).json({ error: 'update bounding box ERROR!!' })
-    }
-}
+//     } catch (error) {
+//         console.error('error:', error);
+//         return res.status(500).json({ error: 'update bounding box ERROR!!' })
+//     }
+// }
 
 export const delBounding_box = async (req: Request, res: Response) => {
     try {
