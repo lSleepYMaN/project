@@ -39,8 +39,13 @@ export const createDetectionClass = async (req: Request, res: Response) => {
 
 export const getAllClass = async (req: Request, res: Response) => {
     try {
-        const idproject = parseInt(req.body.idproject)
+        const idproject = parseInt(req.params.idproject)
         const label = await detectionModel.getAllLabel(idproject)
+        const strClass = []
+
+        for(let i = 0; i < label.length; i++){
+            strClass.push(label[i].class_label)
+        }
 
         if(!label) {
             return res.status(500).json({ 
@@ -53,6 +58,7 @@ export const getAllClass = async (req: Request, res: Response) => {
             type: 'success',
             message: 'get all label สำเร็จ',
             label,
+            strClass,
         })
         
     } catch (error) {
@@ -107,7 +113,7 @@ export const getAllDetection = async (req: Request, res: Response) => {
     }
 }
 
-export const createBounding_box = async (req: Request, res: Response) => {
+export const CRUDBounding_box = async (req: Request, res: Response) => {
     try {
         const token = req.cookies.token
         const user = jwt.verify(token, process.env.SECRET as string)
