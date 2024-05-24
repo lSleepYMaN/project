@@ -262,7 +262,7 @@ export const updateBounding_box = async (idbounding_box: any, x1: any, x2: any, 
         if (check_label.length != 0) {
             return await prisma.bounding_box.update({
                 where: {
-                    idbounding_box: idbounding_box
+                    idbounding_box
                 },
                 data: {
                     x1: (x1/whIMG?.width_image!),
@@ -285,7 +285,7 @@ export const updateBounding_box = async (idbounding_box: any, x1: any, x2: any, 
         })
         return await prisma.bounding_box.update({
             where: {
-                idbounding_box: idbounding_box
+                idbounding_box
             },
             data: {
                 x1: (x1/whIMG?.width_image!),

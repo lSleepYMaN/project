@@ -8,7 +8,7 @@ router.post('/create/segmentation/polygon', check.checkAuth, segmentationControl
 
 router.get('/segmentation/class', check.checkAuth, segmentationController.getAllClass)
 router.get('/segmentation/polygon', check.checkAuth, segmentationController.getPolygon)
-router.get('/segmentation/allSegmentation', check.checkAuth, segmentationController.getAllSegmentation)
+router.get('/segmentation/allSegmentation/:idproject', check.checkAuth, segmentationController.getAllSegmentation)
 
 router.put('/update/segmentation/polygon', check.checkAuth, segmentationController.updatePolygon)
 

@@ -74,7 +74,13 @@ export const getAllSegmentation = async (idproject: any) => {
 
 export const getPolygon = async (idsegmentation: any) => {
     try {
-        return await prisma.polygon.findMany({
+        const whIMG = await prisma.segmentation.findUnique({
+            where: {
+                idsegmentation
+            }
+        })
+
+        const polygon = await prisma.polygon.findMany({
             where: {
                 idsegmentation: idsegmentation
             },
@@ -85,6 +91,11 @@ export const getPolygon = async (idsegmentation: any) => {
                 user_id: true,
             }
         })
+
+        const modifiedPolygon = await Promise.all(polygon.map(async poly => ({
+            idpolygon: poly.idpolygon,
+            
+        })))
         
     } catch (error) {
         console.log("get polygon ERROR!!")

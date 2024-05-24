@@ -122,35 +122,26 @@ export const CRUDBounding_box = async (req: Request, res: Response) => {
         const bounding_box = req.body.bounding_box
         const check_bbox = await detectionModel.getBounding_box(iddetection)
         
-        if (check_bbox.length == 0) {
-            for(let i = 0; i < bounding_box.length; i++){
-                const saveBounding_box = await detectionModel.createBounding_box(bounding_box[i].x1,bounding_box[i].x2
-                                                                                ,bounding_box[i].y1,bounding_box[i].y2
-                                                                                ,iddetection,bounding_box[i].class_label
-                                                                                ,user.id,idproject)
-            }
-        } else {
-            for(let i = 0; i < bounding_box.length; i++){
-                for (let j = 0; j < check_bbox.length; j++){
-                    if (bounding_box[i].id == check_bbox[j].idbounding_box) {
+        for(let i = 0; i < bounding_box.length; i++){
+            for (let j = 0; j < check_bbox.length; j++){
+                if (bounding_box[i].id == check_bbox[j].idbounding_box) {
+
+                    if (bounding_box[i].x1 != check_bbox[j].x1 || 
+                        bounding_box[i].y1 != check_bbox[j].y1 || 
+                        bounding_box[i].x2 != check_bbox[j].x2 || 
+                        bounding_box[i].y2 != check_bbox[j].y2 ||
+                        bounding_box[i].class_label != check_bbox[j].label[0].class_label) {
     
-                        if (bounding_box[i].x1 != check_bbox[j].x1 || 
-                            bounding_box[i].y1 != check_bbox[j].y1 || 
-                            bounding_box[i].x2 != check_bbox[j].x2 || 
-                            bounding_box[i].y2 != check_bbox[j].y2 ||
-                            bounding_box[i].class_label != check_bbox[j].label[0].class_label) {
-    
-                            const updateBounding_box = await detectionModel.updateBounding_box(check_bbox[j].idbounding_box,bounding_box[i].x1,bounding_box[i].x2
+                        const updateBounding_box = await detectionModel.updateBounding_box(check_bbox[j].idbounding_box,bounding_box[i].x1,bounding_box[i].x2
                                                                                                 ,bounding_box[i].y1,bounding_box[i].y2,bounding_box[i].class_label
                                                                                                 ,user.id,iddetection,idproject)
-                            check_bbox.slice(j, 1)
-                            bounding_box.slice(i, 1)
-                        } else {
-                            check_bbox.slice(j, 1)
-                            bounding_box.slice(i, 1)
-                        }
-    
+                        check_bbox.slice(j, 1)
+                        bounding_box.slice(i, 1)
+                    } else {
+                        check_bbox.slice(j, 1)
+                        bounding_box.slice(i, 1)
                     }
+    
                 }
             }
         }

@@ -171,9 +171,9 @@ export const deleteProject = async (req: Request, res: Response) => {
 
         for(let i = 0; i < getsegmentation.length; i++){
             const getPolygon = await segmentationModel.getPolygon(getsegmentation[i].idsegmentation)
-            if (getPolygon.length != 0) {
-                await segmentationModel.delPolygon_by_segmentation(getsegmentation[i].idsegmentation)
-            }
+            // if (getPolygon.length != 0) {
+            //     await segmentationModel.delPolygon_by_segmentation(getsegmentation[i].idsegmentation)
+            // }
             
         }
         

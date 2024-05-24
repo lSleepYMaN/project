@@ -63,7 +63,7 @@ export const getAllClass = async (req: Request, res: Response) => {
 
 export const getAllSegmentation = async (req: Request, res: Response) => {
     try {
-        const idproject = parseInt(req.body.idproject)
+        const idproject = parseInt(req.params.idproject)
         const segmentation = await segmentationModel.getAllSegmentation(idproject)
 
         if(!segmentation) {
@@ -115,13 +115,13 @@ export const getPolygon = async (req: Request, res: Response) => {
         const idsegmentation = parseInt(req.body.idsegmentation)
         const data = await segmentationModel.getPolygon(idsegmentation)
 
-        if (data.length == 0) {
-            return res.status(200).json({
-                type: 'failed',
-                message: 'ไม่มี polygon ในรูปภาพนี้',
+        // if (data.length == 0) {
+        //     return res.status(200).json({
+        //         type: 'failed',
+        //         message: 'ไม่มี polygon ในรูปภาพนี้',
 
-            })
-        }
+        //     })
+        // }
         return res.status(200).json({
             type: 'success',
             message: 'get polygon สำเร็จ',
