@@ -95,7 +95,7 @@ model district {
 
 model polygon {
   idpolygon             Int                @id @default(autoincrement())
-  xy_polygon            String?            @db.VarChar(500)
+  xy_polygon            String?            @db.Text
   created_at            DateTime?          @db.DateTime(0)
   updated_at            DateTime?          @db.DateTime(0)
   user_id               Int

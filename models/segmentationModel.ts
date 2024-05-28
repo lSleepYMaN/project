@@ -3,6 +3,7 @@ import { dir } from "console";
 import fs from 'fs'
 import path from "path";
 import sharp from 'sharp'
+import * as polygon_config from '../utils/polygon_config'
 const prisma = new PrismaClient()
 
 export const createClass = async (label_name: string, idproject: any) => {
@@ -32,6 +33,22 @@ export const getlabelName = async (idproject: any, label_name: string) => {
         
     } catch (error) {
         console.log("get label name ERROR!!")
+        throw error
+    }
+}
+
+export const getLabelByID = async (class_id: any) => {
+    try {
+        return await prisma.segmentation_class.findMany({
+            where: {class_id},
+            select: {
+                class_id: true,
+                class_label: true,
+            }
+        })
+        
+    } catch (error) {
+        console.log("get label by id ERROR!!")
         throw error
     }
 }
@@ -94,8 +111,13 @@ export const getPolygon = async (idsegmentation: any) => {
 
         const modifiedPolygon = await Promise.all(polygon.map(async poly => ({
             idpolygon: poly.idpolygon,
-            
+            xy_polygon: await polygon_config.convert_to_normal(poly.xy_polygon!, whIMG?.width_image!, whIMG?.height_image!),
+            segmentation_class_id: poly.segmentation_class_id,
+            label: await getLabelByID(poly.segmentation_class_id),
+            user_id: poly.user_id
         })))
+
+        return modifiedPolygon
         
     } catch (error) {
         console.log("get polygon ERROR!!")
@@ -142,36 +164,104 @@ export const createSegmentation = async ( imageName: any[], idproject: any) => {
     }
 }
 
-export const createPolygon = async (polygon: string, idsegmentation: any, segmentation_class_id: any, user_id: any) => {
+export const createPolygon = async (polygon: string, idsegmentation: any, segmentation_class_label: any, user_id: any, idproject: any) => {
     try {
+
+        const whIMG = await prisma.segmentation.findUnique({
+            where: {idsegmentation}
+        })
+        const check_label = await prisma.segmentation_class.findMany({
+            where: {
+                AND: [{idproject: idproject}, {class_label: segmentation_class_label}]
+            }
+        })
+
+        const point = await polygon_config.convert_to_normalize(polygon, whIMG?.width_image!, whIMG?.height_image!)
+        
+        if (check_label.length != 0) {
+            return await prisma.polygon.create({
+                data: {
+                    xy_polygon: point, 
+                    created_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                    updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                    idsegmentation: idsegmentation,
+                    segmentation_class_id: check_label[0]?.class_id,
+                    user_id: user_id
+                }
+            })
+        }
+        const create_label =  await prisma.segmentation_class.create({
+            data: {
+                class_label: segmentation_class_label,
+                created_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                idproject: idproject,
+            }
+        })
         return await prisma.polygon.create({
             data: {
-                xy_polygon: polygon, 
+                xy_polygon: point, 
                 created_at: new Date(new Date().getTime()+(7*60*60*1000)),
                 updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
                 idsegmentation: idsegmentation,
-                segmentation_class_id: segmentation_class_id,
+                segmentation_class_id: create_label?.class_id,
                 user_id: user_id
             }
         })
         
+        
     } catch (error) {
-        console.log("create polygon ERROR!!")
+        console.log("ERROR!!!")
         throw error
     }
 
 }
 
-export const updatePolygon = async (idpolygon: any, xy_polygon: string, segmentation_class_id: any, user_id: any) => {
+export const updatePolygon = async (idpolygon: any, xy_polygon: string, segmentation_class_label: any, user_id: any, idsegmentation: any, idproject: any) => {
     try {
+        const whIMG = await prisma.segmentation.findUnique({
+            where: {idsegmentation}
+        })
+        const check_label = await prisma.segmentation_class.findMany({
+            where: {
+                AND: [{idproject: idproject}, {class_label: segmentation_class_label}]
+            }
+        }) 
+        const point = await polygon_config.convert_to_normalize(xy_polygon, whIMG?.width_image!, whIMG?.height_image!)
+        
+        if (check_label.length != 0) {
+            return await prisma.polygon.update({
+                where: {
+                    idpolygon
+                },
+                data: {
+                    xy_polygon: point, 
+                    created_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                    updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                    idsegmentation: idsegmentation,
+                    segmentation_class_id: check_label[0]?.class_id,
+                    user_id: user_id
+                }
+            })
+        }
+        const create_label =  await prisma.segmentation_class.create({
+            data: {
+                class_label: segmentation_class_label,
+                created_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                idproject: idproject,
+            }
+        })
         return await prisma.polygon.update({
             where: {
-                idpolygon: idpolygon
+                idpolygon
             },
             data: {
-                xy_polygon: xy_polygon,
+                xy_polygon: point, 
+                created_at: new Date(new Date().getTime()+(7*60*60*1000)),
                 updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
-                segmentation_class_id: segmentation_class_id,
+                idsegmentation: idsegmentation,
+                segmentation_class_id: create_label?.class_id,
                 user_id: user_id
             }
         })
