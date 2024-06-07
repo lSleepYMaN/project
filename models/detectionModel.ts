@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import * as mapClassId from '../utils/mapClassId'
 import { dir } from "console";
 import fs from 'fs'
 import path from "path";
@@ -42,6 +43,7 @@ export const getAllLabel = async (idproject: any) => {
             where: {
                 idproject: idproject
             },
+            orderBy: { class_id : 'asc'},
             select: {
                 class_id: true,
                 class_label: true,
@@ -150,6 +152,55 @@ export const getBounding_box = async (iddetection: any) => {
         
     } catch (error) {
         console.log("get bounding_box ERROR!!")
+        throw error
+    }
+}
+
+export const export_bbox_YOLO = async (iddetection: any, allClass: any) => {
+    try {
+        const whIMG = await prisma.detection.findUnique({
+            where: {
+                iddetection
+            }
+        })
+
+        const boundingBoxes = await prisma.bounding_box.findMany({
+            where: {
+                iddetection: iddetection
+            },
+            select: {
+                idbounding_box: true,
+                x1: true,
+                x2: true,
+                y1: true,
+                y2: true,
+                detection_class_id: true,
+                user_id: true,
+            }
+        });
+
+        const modifiedBoundingBoxes = await Promise.all(boundingBoxes.map(async box => ({
+            idbounding_box: box.idbounding_box,
+            x1: (Math.round(box.x1! * whIMG?.width_image!) + (Math.round(box.x2! * whIMG?.width_image!) - Math.round(box.x1! * whIMG?.width_image!)/2))/whIMG?.width_image!,
+            y1: (Math.round(box.y1! * whIMG?.height_image!) + (Math.round(box.y2! * whIMG?.height_image!) - Math.round(box.y1! * whIMG?.height_image!)/2))/whIMG?.height_image!,
+            detection_class_id: await mapClassId.detection_map_class(allClass, await prisma.detection_class.findUnique({
+                                                                            where:{
+                                                                                class_id: box.detection_class_id
+                                                                            },
+                                                                            select: {
+                                                                                class_label: true
+                                                                            }
+                                                                            })),
+            width: (Math.round(box.x2! * whIMG?.width_image!) - Math.round(box.x1! * whIMG?.width_image!))/whIMG?.width_image!,
+            height: (Math.round(box.y2! * whIMG?.height_image!) - Math.round(box.y1! * whIMG?.height_image!))/whIMG?.height_image!,
+            user_id: box.user_id,
+        })));
+
+        return modifiedBoundingBoxes;
+
+        
+    } catch (error) {
+        console.log("export YOLO bounding_box ERROR!!")
         throw error
     }
 }
