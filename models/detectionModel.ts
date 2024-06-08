@@ -181,8 +181,8 @@ export const export_bbox_YOLO = async (iddetection: any, allClass: any) => {
 
         const modifiedBoundingBoxes = await Promise.all(boundingBoxes.map(async box => ({
             idbounding_box: box.idbounding_box,
-            x1: (Math.round(box.x1! * whIMG?.width_image!) + (Math.round(box.x2! * whIMG?.width_image!) - Math.round(box.x1! * whIMG?.width_image!)/2))/whIMG?.width_image!,
-            y1: (Math.round(box.y1! * whIMG?.height_image!) + (Math.round(box.y2! * whIMG?.height_image!) - Math.round(box.y1! * whIMG?.height_image!)/2))/whIMG?.height_image!,
+            x_center: (Math.round(box.x1! * whIMG?.width_image!) + (Math.round(box.x2! * whIMG?.width_image!) - Math.round(box.x1! * whIMG?.width_image!)/2))/whIMG?.width_image!,
+            y_center: (Math.round(box.y1! * whIMG?.height_image!) + (Math.round(box.y2! * whIMG?.height_image!) - Math.round(box.y1! * whIMG?.height_image!)/2))/whIMG?.height_image!,
             detection_class_id: await mapClassId.detection_map_class(allClass, await prisma.detection_class.findUnique({
                                                                             where:{
                                                                                 class_id: box.detection_class_id
