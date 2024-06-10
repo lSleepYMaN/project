@@ -11,6 +11,7 @@ router.get('/segmentation/polygon/:idsegmentation', check.checkAuth, segmentatio
 router.get('/segmentation/allSegmentation/:idproject', check.checkAuth, segmentationController.getAllSegmentation)
 
 // router.put('/update/segmentation/polygon', check.checkAuth, segmentationController.updatePolygon)
+router.put('/update/segmentation/class', check.checkAuth, segmentationController.updateClass)
 
 router.delete('/delete/segmentation/polygon', check.checkAuth, segmentationController.delpolygon)
 

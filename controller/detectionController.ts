@@ -89,6 +89,37 @@ export const getClass = async (req: Request, res: Response) => {
     }
 }
 
+export const updateClass = async (req: Request, res: Response) => {
+    try {
+        const idproject = parseInt(req.body.idproject)
+        const class_id = parseInt(req.body.class_id)
+        const label_name = req.body.class_label
+        const check_label = await detectionModel.getlabelName(idproject, label_name)
+        if (check_label.length != 0) {
+            return res.status(500).json({ 
+                type: 'failed',
+                message: 'label นี้ถูกใช้งานแล้ว', 
+            })
+        }
+        const uplabel = await detectionModel.updateClassName(class_id, label_name)
+        if(!uplabel) {
+            return res.status(500).json({ 
+                type: 'failed',
+                message: 'update label ล้มเหลว', 
+            })
+        }
+
+        return res.status(200).json({
+            type: 'success',
+            message: 'update label สำเร็จ'
+        })
+        
+    } catch (error) {
+        console.error('error:', error);
+        return res.status(500).json({ error: 'update class ERROR!!!' })
+    }
+}
+
 export const getAllDetection = async (req: Request, res: Response) => {
     try {
         const idproject = parseInt(req.params.idproject)

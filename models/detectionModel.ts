@@ -72,6 +72,23 @@ export const getLabelByID = async (class_id: any) => {
     }
 }
 
+export const updateClassName = async (class_id: any, label_name: any) => {
+    try {
+        return await prisma.detection_class.update({
+            where: {
+                class_id
+            },
+            data: {
+                class_label: label_name
+            }
+        })
+        
+    } catch (error) {
+        console.log("update label ERROR!!")
+        throw error
+    }
+}
+
 export const getDetection = async (iddetection: any) => {
     try {
         return await prisma.detection.findMany({
