@@ -102,6 +102,7 @@ export const updateClass = async (req: Request, res: Response) => {
             })
         }
         const uplabel = await detectionModel.updateClassName(class_id, label_name)
+
         if(!uplabel) {
             return res.status(500).json({ 
                 type: 'failed',
@@ -117,6 +118,36 @@ export const updateClass = async (req: Request, res: Response) => {
     } catch (error) {
         console.error('error:', error);
         return res.status(500).json({ error: 'update class ERROR!!!' })
+    }
+}
+
+export const delLabel = async (req: Request, res: Response) => {
+    try {
+        const class_id = parseInt(req.params.class_id)
+        const check_label = await detectionModel.getLabelByID(class_id)
+        if (check_label.length == 0) {
+            return res.status(500).json({ 
+                type: 'failed',
+                message: 'ไม่พบ label ที่ต้องการลบ', 
+            })
+        }
+        const delclass = detectionModel.delLabel(class_id)
+
+        if(!delclass) {
+            return res.status(500).json({ 
+                type: 'failed',
+                message: 'delete label ล้มเหลว', 
+            })
+        }
+
+        return res.status(200).json({
+            type: 'success',
+            message: 'delete label สำเร็จ'
+        })
+        
+    } catch (error) {
+        console.error('error:', error);
+        return res.status(500).json({ error: 'delete class ERROR!!!' })
     }
 }
 

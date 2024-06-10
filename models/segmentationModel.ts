@@ -88,6 +88,20 @@ export const updateClassName = async (class_id: any, label_name: any) => {
     }
 }
 
+export const delLabel = async (class_id: any) => {
+    try {
+        return await prisma.segmentation_class.delete({
+            where: {
+                class_id
+            }
+        })
+        
+    } catch (error) {
+        console.log("delete label ERROR!!")
+        throw error
+    }
+}
+
 export const getAllSegmentation = async (idproject: any) => {
     try {
         return await prisma.segmentation.findMany({

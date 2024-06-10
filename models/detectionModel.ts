@@ -89,6 +89,20 @@ export const updateClassName = async (class_id: any, label_name: any) => {
     }
 }
 
+export const delLabel = async (class_id: any) => {
+    try {
+        return await prisma.detection_class.delete({
+            where: {
+                class_id
+            }
+        })
+        
+    } catch (error) {
+        console.log("delete label ERROR!!")
+        throw error
+    }
+}
+
 export const getDetection = async (iddetection: any) => {
     try {
         return await prisma.detection.findMany({
