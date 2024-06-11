@@ -91,6 +91,24 @@ export const updateClassName = async (class_id: any, label_name: any) => {
 
 export const delLabel = async (class_id: any) => {
     try {
+        const check_bbox = await prisma.bounding_box.findMany({
+            where: {
+                detection_class_id: class_id
+            }
+        })
+        if (check_bbox.length != 0) {
+            await prisma.bounding_box.deleteMany({
+                where: {
+                    detection_class_id: class_id
+                }
+            })
+        }
+        await prisma.bounding_box.deleteMany({
+            where: {
+                detection_class_id: class_id
+            }
+        })
+
         return await prisma.detection_class.delete({
             where: {
                 class_id

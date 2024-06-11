@@ -90,6 +90,20 @@ export const updateClassName = async (class_id: any, label_name: any) => {
 
 export const delLabel = async (class_id: any) => {
     try {
+        const check_polygon = await prisma.polygon.findMany({
+            where: {
+                segmentation_class_id: class_id
+            }
+        })
+        if (check_polygon.length != 0) {
+           await prisma.polygon.deleteMany({
+            where: {
+                segmentation_class_id: class_id
+            }
+        }) 
+        }
+        
+
         return await prisma.segmentation_class.delete({
             where: {
                 class_id
