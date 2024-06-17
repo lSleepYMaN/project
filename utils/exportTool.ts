@@ -12,11 +12,15 @@ export const detection_YOLO = async (idproject: any) => {
         const project = await projectModel.getprojectById(idproject);
         const allClass: string[] = [];
         const YOLOdir = project?.project_name;
-        const imageDir = path.join(YOLOdir!, 'images');
-        const labelDir = path.join(YOLOdir!, 'labels');
+        const train = path.join(YOLOdir!, 'train');
+        const imageDir = path.join(train, 'images');
+        const labelDir = path.join(train, 'labels');
 
         if (!fs.existsSync(YOLOdir!)) {
             fs.mkdirSync(YOLOdir!);
+        }
+        if (!fs.existsSync(train)) {
+            fs.mkdirSync(train);
         }
         if (!fs.existsSync(imageDir)) {
             fs.mkdirSync(imageDir);
@@ -48,11 +52,32 @@ export const detection_YOLO = async (idproject: any) => {
 
         const yamlNames = allClass.map((name, index) => `${index}: ${name}`).join('\n');
         const yamlContent = `path: .
-train: images
+train: train/images
 names:
 ${yamlNames}`
 
         fs.writeFileSync(path.join(YOLOdir!, 'data.yaml'), yamlContent);
+
+        const configYamlContent = `task: detect
+mode: train
+model: yolov8n.pt
+patience: 50
+project: ${project?.project_name}
+name: 8n_640
+hsv_h: 0
+hsv_s: 0
+hsv_v: 0
+degrees: 0
+translate: 0.1
+scale: 0.1
+shear: 0.0
+perspective: 0.0
+flipud: 0
+fliplr: 0.5
+mosaic: 0
+mixup: 0`
+
+        fs.writeFileSync(path.join(YOLOdir!, 'config.yaml'), configYamlContent);
 
         const zipFilePath = path.join(__dirname, '..', 'project_path', `${idproject}`, `${project?.project_name}.zip`);
         const zipFile = fs.createWriteStream(zipFilePath);
