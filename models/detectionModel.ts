@@ -266,7 +266,7 @@ export const getBounding_box_by_id = async (idbounding_box: any) => {
     }
 }
 
-export const createDetection = async ( imageName: any[], idproject: any) => {
+export const createDetection = async ( imageName: any, idproject: any) => {
     try {
         for (let i = 0; i < imageName.length; i++) {
             let imagePath = path.join(__dirname, '../project_path', idproject.toString(), 'images', imageName[i])
@@ -344,6 +344,39 @@ export const createBounding_box = async (x1: any, x2: any, y1: any, y2: any, idd
     } catch (error) {
         console.log("create bounding box ERROR!!")
         throw error
+    }
+
+}
+
+export const create_import_Bounding_box = async (detection: any, user_id: any, idproject: any) => {
+    try {
+        for(let i = 0; detection.length; i++){
+            const get_Detection = await prisma.detection.findMany({
+                where: {
+                    image_path: detection[i].image_path,
+                    idproject: idproject,
+                }
+            })
+            await prisma.bounding_box.create({
+                data: {
+                    x1: detection[i].x1,
+                    y1: detection[i].y1,
+                    x2: detection[i].x2,
+                    y2: detection[i].y2,
+                    created_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                    updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                    user_id: detection[i].user_id,
+                    iddetection: get_Detection[0].iddetection,
+                    detection_class_id: detection[i].classId
+                }
+            })
+        }
+        return 1
+        
+    } catch (error) {
+        console.log("create import bounding box ERROR!!")
+        console.log("error",error)
+        return 0
     }
 
 }

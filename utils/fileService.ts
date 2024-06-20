@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import unzipper from 'unzipper';
+const unzipper = require('unzipper')
 
 export const extractZip = async (filePath: string, destination: string) => {
     await fs.createReadStream(filePath)
