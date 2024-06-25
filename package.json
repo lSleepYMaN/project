@@ -36,7 +36,7 @@
   },
   "scripts": {
     "server": "npx ts-node server.ts",
-    "start": "nodemon server.ts"
+    "start": "nodemon --config nodemon.json"
   },
   "name": "project",
   "version": "1.0.0",

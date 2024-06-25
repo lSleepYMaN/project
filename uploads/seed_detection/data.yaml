@@ -1,0 +1,27 @@
+
+path: D:/seed_detection
+train: train/images
+
+# Classes 
+names:
+  0: กอกกัน - rhus_rhetsoides
+  1: กัลปพฤกษ์ - cassia_bakeriana
+  2: กางหลวง - albizia_chinensis
+  3: กาฬพฤกษ์ - cassia_grandis
+  4: จำปีป่า - magnolia_baillonii
+  5: ชิงชัน - delbergia_oliveri
+  6: นางพญาเสือโคร่ง - prunus_cerasoides
+  7: ฝาละมี - alangium_kurzii
+  8: มะกล่ำต้น - adenanthera_pavonina    
+  9: มะกอกพราน - turpinia_pomifera    
+  10: มะขามป้อม - phyllanthus_emblica    
+  11: มะคังดง - ostodes_paniculata
+  12: มะซัก - sapindus_rarak
+  13: มะฝ่อ - trewia_nudiflora    
+  14: มะมือ - choerospondias_axillaris
+  15: มะเม่าดง - antidesma_bunius
+  16: มะองนก - drypetes_roxburghii
+  17: ราชพฤกษ์ - cassia_fistula
+  18: สิวาละที - bridelia_glauca
+  19: หมอนหิน - hovenia_dulcis
+

@@ -18,20 +18,21 @@ export const YOLO_detection = async (req: Request, res: Response) => {
         const file = req.file
         const projectName = req.body.projectName
         const idproject = parseInt(req.body.idproject)
-        const projectPath = path.join(process.cwd(), 'uploads', projectName);
+        const projectPath = path.join(process.cwd(), 'uploads');
 
         if (!fs.existsSync(projectPath)) {
             fs.mkdirSync(projectPath, { recursive: true });
         }
+        const projectPath2 = path.join(process.cwd(), 'uploads', projectName);
 
-        await fileService.extractZip(file?.path!, projectPath)
+        await fileService.extractZip(file?.path!, projectPath,)
 
         fs.unlinkSync(file?.path!)
 
-        const imagesDir = path.join(projectPath, 'images', 'train');
-        const labelsDir = path.join(projectPath, 'labels', 'train');
+        const imagesDir = path.join(projectPath2, 'images', 'train');
+        const labelsDir = path.join(projectPath2, 'labels', 'train');
 
-        const labels: any[] = [];
+        const labels: { index: number, label: string, projectId: number }[] = [];
         const detections: any[] = [];
 
         let img = path.join(__dirname, '../project_path', idproject.toString(), 'images')
@@ -39,12 +40,13 @@ export const YOLO_detection = async (req: Request, res: Response) => {
         const imageFiles = fs.readdirSync(imagesDir);
         const storagePath = path.join(__dirname, '../project_path', idproject.toString(), 'images');
         let thumbsPath = path.join(__dirname, '../project_path', idproject.toString(), 'thumbs')
-        if (!fs.existsSync(storagePath)) {
-            fs.mkdirSync(storagePath, { recursive: true });
-        }
+        // if (!fs.existsSync(storagePath)) {
+        //     fs.mkdirSync(storagePath, { recursive: true });
+        // }
 
         for (const imageFile of imageFiles) {
             const newFilePath = path.join(storagePath, imageFile);
+            console.log("newFilePath : ", newFilePath)
             let thumbsPath = path.join(__dirname, '../project_path', idproject.toString(), 'thumbs', imageFile)
             fs.copyFileSync(path.join(imagesDir, imageFile), newFilePath);
             sharp(newFilePath).resize(200,200).toFile(thumbsPath)
@@ -53,19 +55,26 @@ export const YOLO_detection = async (req: Request, res: Response) => {
 
         }
 
-        const yamlPath = path.join(projectPath, 'data.yaml');
+        const yamlPath = path.join(projectPath2, 'data.yaml');
         if (fs.existsSync(yamlPath)) {
-            const yamlContent = fileService.readYamlFile(yamlPath);
+            const yamlContent = fs.readFileSync(yamlPath, 'utf-8');
             const parsedYaml = parse(yamlContent);
 
-            if (parsedYaml.names) {
-                parsedYaml.names.forEach((name: string, index: number) => {
-                    labels.push({ index, label: name, projectId: idproject });
+            if (parsedYaml.names && typeof parsedYaml.names === 'object') {
+                Object.keys(parsedYaml.names).forEach((key: string) => {
+                    const index = parseInt(key);
+                    const label = parsedYaml.names[key];
+                    labels.push({ index, label, projectId: idproject });
                 });
+            } else {
+                return res.status(400).json({ error: 'Invalid YAML structure: names field is missing or not an object' });
             }
+        } else {
+            return res.status(400).json({ error: 'data.yaml file not found' });
         }
-        for(let i = 0; i < labels.length; i++){
-            await detectionModel.createClass(labels[i].label, idproject)
+        console.log(labels)
+        for (const label of labels) {
+            await detectionModel.createClass(label.label, idproject);
         }
         const labelFiles = fs.readdirSync(labelsDir);
 
@@ -78,6 +87,7 @@ export const YOLO_detection = async (req: Request, res: Response) => {
                     const [classId, x_center, y_center, width, height] = line.split(' ');
                     const baseName = path.basename(labelFile, '.txt');
                 let imageFileName = `${baseName}.jpg`;
+                console.log("Name : ",imageFileName)
 
                 if (fs.existsSync(path.join(imagesDir, `${baseName}.png`))) {
                     imageFileName = `${baseName}.png`;
@@ -89,7 +99,6 @@ export const YOLO_detection = async (req: Request, res: Response) => {
                         x2: parseFloat(x_center) + (parseFloat(width)/2),
                         y2: parseFloat(y_center) + (parseFloat(height)/2),
                         user_id: user.id,
-                        image_path: imageFileName,
                         idproject: idproject
                     });
                 }

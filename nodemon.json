@@ -1,0 +1,6 @@
+{
+    "watch": ["src", "config"],
+    "ignore": ["uploads/*", "node_modules/*", ".git"],
+    "ext": "ts,json",
+    "exec": "ts-node server.ts"
+}
