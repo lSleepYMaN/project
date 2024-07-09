@@ -18,19 +18,24 @@ export const YOLO_detection = async (req: Request, res: Response) => {
         const file = req.file
         const projectName = req.body.projectName
         const idproject = parseInt(req.body.idproject)
-        const projectPath = path.join(process.cwd(), 'uploads');
+        const projectPath = path.join(process.cwd(), 'uploads', idproject.toString());
 
         if (!fs.existsSync(projectPath)) {
             fs.mkdirSync(projectPath, { recursive: true });
         }
-        const projectPath2 = path.join(process.cwd(), 'uploads', projectName);
+        // const projectPath2 = path.join(process.cwd(), 'uploads', idproject.toString());
+
+        // const projectPath2 = path.join(process.cwd(), 'uploads');
 
         await fileService.extractZip(file?.path!, projectPath,)
 
         fs.unlinkSync(file?.path!)
 
-        const imagesDir = path.join(projectPath2, 'images', 'train');
-        const labelsDir = path.join(projectPath2, 'labels', 'train');
+        // const imagesDir = path.join(projectPath, 'images', 'train');
+        // const labelsDir = path.join(projectPath, 'labels', 'train');
+
+        const imagesDir = path.join(projectPath, 'train', 'images');
+        const labelsDir = path.join(projectPath, 'train', 'labels');
 
         const labels: { index: number, label: string, projectId: number }[] = [];
         const detections: any[] = [];
@@ -55,13 +60,13 @@ export const YOLO_detection = async (req: Request, res: Response) => {
 
         }
 
-        const yamlPath = path.join(projectPath2, 'data.yaml');
+        const yamlPath = path.join(projectPath, 'data.yaml');
         if (fs.existsSync(yamlPath)) {
             const yamlContent = fs.readFileSync(yamlPath, 'utf-8');
             const parsedYaml = parse(yamlContent);
 
             if (parsedYaml.names && typeof parsedYaml.names === 'object') {
-                Object.keys(parsedYaml.names).forEach((key: string) => {
+                Object.keys(parsedYaml.names).forEach((key: any) => {
                     const index = parseInt(key);
                     const label = parsedYaml.names[key];
                     labels.push({ index, label, projectId: idproject });
@@ -92,17 +97,43 @@ export const YOLO_detection = async (req: Request, res: Response) => {
                 if (fs.existsSync(path.join(imagesDir, `${baseName}.png`))) {
                     imageFileName = `${baseName}.png`;
                 }
+                const imgPath = path.join(imagesDir, imageFileName)
+                const metadata = await sharp(imgPath).metadata();
+                const image_width = metadata.width;
+                const image_height = metadata.height;
                     detections.push({
                         classId: await mapClassId.map_detection_import(parseInt(classId),labels,idproject),
-                        x1: parseFloat(x_center) - (parseFloat(width)/2),
-                        y1: parseFloat(y_center) - (parseFloat(height)/2),
-                        x2: parseFloat(x_center) + (parseFloat(width)/2),
-                        y2: parseFloat(y_center) + (parseFloat(height)/2),
+                        x1: ((parseFloat(x_center)*image_width!) - ((parseFloat(width)*image_width!)/2))/image_width!,
+                        y1: ((parseFloat(y_center)*image_height!) - ((parseFloat(height)*image_height!)/2))/image_height!,
+                        x2: ((parseFloat(x_center)*image_width!) + ((parseFloat(width)*image_width!)/2))/image_width!,
+                        y2: ((parseFloat(y_center)*image_height!) + ((parseFloat(height)*image_height!)/2))/image_height!,
                         user_id: user.id,
+                        image_path: imageFileName,
                         idproject: idproject
                     });
                 }
             }
+        }
+
+        const trainDir = path.join(projectPath, 'train');
+
+        if (fs.existsSync(projectPath)) {
+            fs.readdirSync(imagesDir).forEach((file) => {
+                const filePath = path.join(imagesDir, file);
+                fs.unlinkSync(filePath);
+            })
+            fs.readdirSync(labelsDir).forEach((file) => {
+                const filePath = path.join(labelsDir, file);
+                fs.unlinkSync(filePath);
+            })
+            fs.rmdirSync(imagesDir);
+            fs.rmdirSync(labelsDir);
+            fs.rmdirSync(trainDir);
+            fs.readdirSync(projectPath).forEach((file) => {
+                const filePath = path.join(projectPath, file);
+                fs.unlinkSync(filePath);
+            })
+            fs.rmdirSync(projectPath);
         }
 
         const save_bbox = await detectionModel.create_import_Bounding_box(detections, user.id, idproject)

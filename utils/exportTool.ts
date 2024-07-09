@@ -50,7 +50,7 @@ export const detection_YOLO = async (idproject: any) => {
             fs.copyFileSync(imagePath, destPath);
         }
 
-        const yamlNames = allClass.map((name, index) => `${index}: ${name}`).join('\n');
+        const yamlNames = allClass.map((name, index) => `  ${index}: ${name}`).join('\n');
         const yamlContent = `path: .
 train: train/images
 names:
