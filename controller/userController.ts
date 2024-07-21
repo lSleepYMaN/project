@@ -106,7 +106,7 @@ export const registerUser = async (req: Request, res: Response) => {
         }
 
         const code = sendEmail.genCode()
-        //await sendEmail.sendMailToVerify(email)
+        await sendEmail.sendMailToVerify(email)
 
         const hashedPassword = await bcrypt.hash(password, 10)
 
@@ -190,9 +190,10 @@ export const loginUser = async (req: Request, res: Response) => {
             })
         }
 
-        if (findUser.verified_code != null) {
+        if (findUser.status == -1) {
             return res.status(400).json({
-                type: 'failed',
+                type: 'verify',
+                id: findUser.id,
                 message: 'กรุณายืนยันตัวตน!!',
             })
         }
@@ -266,7 +267,7 @@ export const forgetPass = async (req: Request, res: Response) => {
             sameSite: 'none',
         })
 
-        await sendEmail.sendMailToForget(email)
+        //await sendEmail.sendMailToForget(email)
 
         return res.status(200).json({
             type: 'success',
