@@ -134,7 +134,7 @@ export const YOLO_detection = async (req: Request, res: Response) => {
         if (save_bbox == 0) {
             return res.status(200).json({
                 type: 'failed',
-                message: 'import bbox ไม่สำเร็จ',
+                message: 'import bbox failed',
 
             })
         }
@@ -142,7 +142,7 @@ export const YOLO_detection = async (req: Request, res: Response) => {
         if (save_bbox == 1) {
             return res.status(200).json({
                 type: 'success',
-                message: 'import bbox สำเร็จ',
+                message: 'import bbox success',
             })
         }
         
@@ -278,7 +278,7 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
         if (save_polygon == 0) {
             return res.status(200).json({
                 type: 'failed',
-                message: 'import polygon ไม่สำเร็จ',
+                message: 'import polygon failed',
 
             })
         }
@@ -286,7 +286,7 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
         if (save_polygon == 1) {
             return res.status(200).json({
                 type: 'success',
-                message: 'import polygon สำเร็จ',
+                message: 'import polygon success',
             })
         }
         

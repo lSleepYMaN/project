@@ -26,13 +26,13 @@ export const createProject = async (req: Request, res: Response) => {
         if(!userin) {
             return res.status(500).json({ 
                 type: 'failed',
-                message: 'สร้าง project ล้มเหลว', 
+                message: 'create project failed', 
             })
         }
 
         return res.status(200).json({
             type: 'success',
-            message: 'สร้าง project สำเร็จ',
+            message: 'create project success',
             create,
         })
         
@@ -53,13 +53,13 @@ export const createShareProject = async (req: Request, res: Response) => {
         if(!createShare) {
             return res.status(500).json({ 
                 type: 'failed',
-                message: 'สร้าง share project ล้มเหลว', 
+                message: 'create share project failed', 
             })
         }
 
         return res.status(200).json({
             type: 'success',
-            message: 'สร้าง share project สำเร็จ',
+            message: 'create share project success',
         })
         
     } catch (error) {
@@ -77,13 +77,13 @@ export const getAllproject = async (req: Request, res: Response) => {
         if(!project) {
             return res.status(400).json({ 
                 type: 'failed',
-                message: 'get project ล้มเหลว', 
+                message: 'get project failed', 
             })
         }
 
         return res.status(200).json({
             type: 'success',
-            message: 'get project สำเร็จ',
+            message: 'get project success',
             project,
         })
             
@@ -102,13 +102,13 @@ export const getprojectById = async (req: Request, res: Response) => {
         if(!project) {
             return res.status(400).json({ 
                 type: 'failed',
-                message: 'get project ล้มเหลว', 
+                message: 'get project failed', 
             })
         }
 
         return res.status(200).json({
             type: 'success',
-            message: 'get project สำเร็จ',
+            message: 'get project success',
             project,
             
         })
@@ -130,13 +130,13 @@ export const getShareproject = async (req: Request, res: Response) => {
         if(!project) {
             return res.status(400).json({ 
                 type: 'failed',
-                message: 'get share project ล้มเหลว', 
+                message: 'get share project failed', 
             })
         }
 
         return res.status(200).json({
             type: 'success',
-            message: 'get share project สำเร็จ',
+            message: 'get share project success',
             project,
             
         })
@@ -155,7 +155,7 @@ export const deleteProject = async (req: Request, res: Response) => {
         if (data_project == null) {
             return res.status(400).json({ 
                 type: 'failed',
-                message: 'ไม่พบ project ที่ต้องการลบในระบบ', 
+                message: 'project not found', 
             })
         }
         const delUser_in_charge = await projectModel.deleteUser_in_charge(idproject)
@@ -185,13 +185,13 @@ export const deleteProject = async (req: Request, res: Response) => {
         if(!delUser_in_charge || !delproject) {
             return res.status(400).json({ 
                 type: 'failed',
-                message: 'delete project ล้มเหลว', 
+                message: 'delete project failed', 
             })
         }
 
         return res.status(200).json({
             type: 'success',
-            message: 'delete project สำเร็จ',
+            message: 'delete project success',
             
         })
         
@@ -216,7 +216,7 @@ export const uploadImage = async (req: Request, res: Response) => {
         if (type == null) {
             return res.status(400).json({ 
                 type: 'failed',
-                message: 'ไม่สามารถระบุรูปแบบการเซฟได้'
+                message: 'Unable to specify save format'
             })
         }
         

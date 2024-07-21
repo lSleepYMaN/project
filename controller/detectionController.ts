@@ -21,13 +21,13 @@ export const createDetectionClass = async (req: Request, res: Response) => {
         if(!create) {
             return res.status(500).json({ 
                 type: 'failed',
-                message: 'สร้าง label ล้มเหลว', 
+                message: 'Create label failed', 
             })
         }
 
         return res.status(200).json({
             type: 'success',
-            message: 'สร้าง label สำเร็จ',
+            message: 'Create label success',
             create,
         })
         
@@ -50,13 +50,13 @@ export const getAllClass = async (req: Request, res: Response) => {
         if(!label) {
             return res.status(500).json({ 
                 type: 'failed',
-                message: 'get all label ล้มเหลว', 
+                message: 'Get all label failed', 
             })
         }
 
         return res.status(200).json({
             type: 'success',
-            message: 'get all label สำเร็จ',
+            message: 'Get all label success',
             label,
             strClass,
         })
@@ -74,13 +74,13 @@ export const getClass = async (req: Request, res: Response) => {
         if(!label) {
             return res.status(500).json({ 
                 type: 'failed',
-                message: 'get label ล้มเหลว', 
+                message: 'Get label failed', 
             })
         }
 
         return res.status(200).json({
             type: 'success',
-            message: 'get label สำเร็จ',
+            message: 'Get label success',
             label,
         })
     } catch (error) {
@@ -98,7 +98,7 @@ export const updateClass = async (req: Request, res: Response) => {
         if (check_label.length != 0) {
             return res.status(500).json({ 
                 type: 'failed',
-                message: 'label นี้ถูกใช้งานแล้ว', 
+                message: 'label has been used.', 
             })
         }
         const uplabel = await detectionModel.updateClassName(class_id, label_name)
@@ -106,13 +106,13 @@ export const updateClass = async (req: Request, res: Response) => {
         if(!uplabel) {
             return res.status(500).json({ 
                 type: 'failed',
-                message: 'update label ล้มเหลว', 
+                message: 'update label failed', 
             })
         }
 
         return res.status(200).json({
             type: 'success',
-            message: 'update label สำเร็จ'
+            message: 'update label success'
         })
         
     } catch (error) {
@@ -128,7 +128,7 @@ export const delLabel = async (req: Request, res: Response) => {
         if (check_label.length == 0) {
             return res.status(500).json({ 
                 type: 'failed',
-                message: 'ไม่พบ label ที่ต้องการลบ', 
+                message: 'label not found', 
             })
         }
         const delclass = detectionModel.delLabel(class_id)
@@ -136,13 +136,13 @@ export const delLabel = async (req: Request, res: Response) => {
         if(!delclass) {
             return res.status(500).json({ 
                 type: 'failed',
-                message: 'delete label ล้มเหลว', 
+                message: 'delete label failed', 
             })
         }
 
         return res.status(200).json({
             type: 'success',
-            message: 'delete label สำเร็จ'
+            message: 'delete label success'
         })
         
     } catch (error) {
@@ -159,13 +159,13 @@ export const getAllDetection = async (req: Request, res: Response) => {
         if(!detection) {
             return res.status(500).json({ 
                 type: 'failed',
-                message: 'get all label ล้มเหลว', 
+                message: 'get all label failed', 
             })
         }
 
         return res.status(200).json({
             type: 'success',
-            message: 'get all label สำเร็จ',
+            message: 'get all label success',
             detection,
         })
         
@@ -218,7 +218,7 @@ export const CRUDBounding_box = async (req: Request, res: Response) => {
         }
         return res.status(200).json({
             type: 'success',
-            message: 'CRUD bounding box สำเร็จ',
+            message: 'CRUD bounding box success',
 
         })
         
@@ -239,7 +239,7 @@ export const getBounding_box = async (req: Request, res: Response) => {
         if (data.length == 0) {
             return res.status(200).json({
                 type: 'failed',
-                message: 'ไม่มี bounding box ในรูปภาพนี้',
+                message: 'There is no bounding box in this image',
 
             })
         }
@@ -311,7 +311,7 @@ export const delBounding_box = async (req: Request, res: Response) => {
                 return res.status(200).json({
                     type: 'failed',
                     idbounding_box: idbounding_box[i],
-                    message: 'bounding box ไม่มีในระบบ',
+                    message: 'bounding box not found',
 
                 })
             }
@@ -321,7 +321,7 @@ export const delBounding_box = async (req: Request, res: Response) => {
                 return res.status(200).json({
                     type: 'failed',
                     idbounding_box: idbounding_box[i],
-                    message: 'delete bounding box ไม่สำเร็จ',
+                    message: 'delete bounding box failed',
 
                 })
             }
@@ -329,7 +329,7 @@ export const delBounding_box = async (req: Request, res: Response) => {
 
         return res.status(200).json({
             type: 'success',
-            message: 'delete bounding box สำเร็จ',
+            message: 'delete bounding box success',
 
         })
         

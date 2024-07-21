@@ -10,12 +10,12 @@ export const getAllUsers = async (req: Request, res: Response) => {
         if(!users){
             return res.status(400).json({
                 type: 'failed',
-                message: 'get users ล้มเหลว'
+                message: 'get users failed'
         })
         }
         return res.status(200).json({
                 type: 'success',
-                message: 'get users สำเร็จ',
+                message: 'get users success',
                 users
         })
     } catch (error) {
@@ -31,12 +31,12 @@ export const getUserById = async (req: Request, res: Response) => {
         if(!user){
             return res.status(400).json({
                 type: 'failed',
-                message: 'get user ล้มเหลว'
+                message: 'get user failed'
         })
         }
         return res.status(200).json({
                 type: 'success',
-                message: 'get user สำเร็จ',
+                message: 'get user success',
                 user
         })
         
@@ -56,7 +56,7 @@ export const registerUser = async (req: Request, res: Response) => {
         return res.status(400).json({
             type: 'failed',
             Attribute: 'username',
-            message:'ชื่อผู้ใช้ไม่ถูกต้อง',
+            message:'Invalid username',
         })
     }
 
@@ -64,7 +64,7 @@ export const registerUser = async (req: Request, res: Response) => {
         return res.status(400).json({ 
             type: 'failed',
             Attribute: 'email',
-            message: 'อีเมลล์ไม่ถูกต้อง',
+            message: 'Invalid email',
         })
     }
 
@@ -72,7 +72,7 @@ export const registerUser = async (req: Request, res: Response) => {
         return res.status(400).json({ 
             type: 'failed',
             Attribute: 'password',
-            message: 'รหัสผ่านไม่ถูกต้อง',
+            message: 'The password is incorrect.',
         })
     }
 
@@ -83,7 +83,7 @@ export const registerUser = async (req: Request, res: Response) => {
             return res.status(400).json({ 
                 type: 'failed',
                 Attribute: 'username',
-                message: 'ชื่อผู้ใช้ถูกใช้งานแล้ว', 
+                message: 'Username is already in use', 
             })
         }
 
@@ -93,7 +93,7 @@ export const registerUser = async (req: Request, res: Response) => {
             return res.status(400).json({ 
                 type: 'failed',
                 Attribute: 'email',
-                message: 'อีเมลล์ถูกใช้งานแล้ว',
+                message: 'Email is already in use.',
             })
         }
 
@@ -101,7 +101,7 @@ export const registerUser = async (req: Request, res: Response) => {
             return res.status(400).json({ 
                 type: 'failed',
                 Attribute: 'password',
-                message: 'รหัสผ่านไม่สอดคล้องกัน',
+                message: 'Passwords are inconsistent.',
             })
         }
 
@@ -121,7 +121,7 @@ export const registerUser = async (req: Request, res: Response) => {
         
         return res.status(200).json({
             type: 'success',
-            message: 'ลงทะเบียนสำเร็จ',
+            message: 'Successfully registered',
         })
 
     } catch (error) {
@@ -138,7 +138,7 @@ export const verifyUser = async (req: Request, res: Response) => {
         if (!getCode) {
             return res.status(400).json({
                 type: 'failed',
-                message: 'ยืนยันตัวตนไม่ถูกต้อง',
+                message: 'Verified is not correctly',
             })
         } else {
             await userModel.updateVerifyCodeTonull(getCode.id)
@@ -146,7 +146,7 @@ export const verifyUser = async (req: Request, res: Response) => {
             res.clearCookie('code')
             return res.status(200).json({
                 type: 'success',
-                message: 'Verify สำเร็จ',
+                message: 'Verify success',
             }) 
  
         }
@@ -167,7 +167,7 @@ export const sendNewCode = async (req: Request, res: Response) => {
 
         return res.status(200).json({
             type: 'success',
-            message: 'Update code สำเร็จ',
+            message: 'Update code success',
         })
     } catch (error) {
         console.error('Verify user error!', error)
@@ -186,7 +186,7 @@ export const loginUser = async (req: Request, res: Response) => {
             return res.status(400).json({
                 type: 'failed',
                 Attribute: 'username',
-                message: 'ชื่อผู้ใช้ไม่ถูกต้อง',
+                message: 'Invalid username',
             })
         }
 
@@ -194,7 +194,7 @@ export const loginUser = async (req: Request, res: Response) => {
             return res.status(400).json({
                 type: 'verify',
                 id: findUser.id,
-                message: 'กรุณายืนยันตัวตน!!',
+                message: 'Please verify.',
             })
         }
 
@@ -204,7 +204,7 @@ export const loginUser = async (req: Request, res: Response) => {
             return res.status(400).json({
                 type: 'failed',
                 Attribute: 'password',
-                message: 'Password ไม่ถูกต้อง',
+                message: 'Password is incorrect',
              })
         } else {
             await userModel.updateTimeUser(username)
@@ -220,7 +220,7 @@ export const loginUser = async (req: Request, res: Response) => {
 
             res.status(200).json({
                 type: 'success',
-                message: 'เข้าสู่ระบบสำเร็จ',
+                message: 'Login successful',
             })
         }
 
@@ -239,7 +239,7 @@ export const logoutUser = async (req: Request, res: Response) => {
         res.clearCookie('token')
         return res.status(200).json({
             type: 'success',
-            message: 'ออกจากระบบสำเร็จ',
+            message: 'Log out successfully',
         }) 
         
         
@@ -297,7 +297,7 @@ export const newPassword = async (req: Request, res: Response) => {
         res.clearCookie('forgetPassToken')
         return res.status(200).json({
             type: 'success',
-            message: 'Update password สำเร็จ',
+            message: 'Update password success',
         }) 
         
     } catch (error) {
@@ -313,7 +313,7 @@ export const returnUsername = async (req: Request, res: Response) => {
 
         return res.status(200).json({
             type: 'success',
-            message: 'ส่งค่า username สำเร็จ',
+            message: 'Username value sent successfully.',
             username: user.username,
         })
         

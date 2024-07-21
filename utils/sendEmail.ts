@@ -12,7 +12,6 @@ export const genCode = () => {
       return code;
 }
 
-
 export const sendMailToVerify = async (email: string) => {
     try {
         

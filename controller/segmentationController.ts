@@ -21,13 +21,13 @@ export const createSegmentationClass = async (req: Request, res: Response) => {
         if(!create) {
             return res.status(500).json({ 
                 type: 'failed',
-                message: 'สร้าง label ล้มเหลว', 
+                message: 'create label failed', 
             })
         }
 
         return res.status(200).json({
             type: 'success',
-            message: 'สร้าง label สำเร็จ',
+            message: 'create label success',
             create,
         })
         
@@ -50,13 +50,13 @@ export const getAllClass = async (req: Request, res: Response) => {
         if(!label) {
             return res.status(500).json({ 
                 type: 'failed',
-                message: 'get all label ล้มเหลว', 
+                message: 'get all label failed', 
             })
         }
 
         return res.status(200).json({
             type: 'success',
-            message: 'get all label สำเร็จ',
+            message: 'get all label success',
             label,
             strClass,
         })
@@ -76,20 +76,20 @@ export const updateClass = async (req: Request, res: Response) => {
         if (check_label.length != 0) {
             return res.status(500).json({ 
                 type: 'failed',
-                message: 'label นี้ถูกใช้งานแล้ว', 
+                message: 'label has been used.', 
             })
         }
         const uplabel = await segmentationModel.updateClassName(class_id, label_name)
         if(!uplabel) {
             return res.status(500).json({ 
                 type: 'failed',
-                message: 'update label ล้มเหลว', 
+                message: 'update label failed', 
             })
         }
 
         return res.status(200).json({
             type: 'success',
-            message: 'update label สำเร็จ'
+            message: 'update label success'
         })
         
     } catch (error) {
@@ -105,7 +105,7 @@ export const delLabel = async (req: Request, res: Response) => {
         if (check_label.length == 0) {
             return res.status(500).json({ 
                 type: 'failed',
-                message: 'ไม่พบ label ที่ต้องการลบ', 
+                message: 'label not found', 
             })
         }
         const delclass = segmentationModel.delLabel(class_id)
@@ -113,13 +113,13 @@ export const delLabel = async (req: Request, res: Response) => {
         if(!delclass) {
             return res.status(500).json({ 
                 type: 'failed',
-                message: 'delete label ล้มเหลว', 
+                message: 'delete label failed', 
             })
         }
 
         return res.status(200).json({
             type: 'success',
-            message: 'delete label สำเร็จ'
+            message: 'delete label success'
         })
         
     } catch (error) {
@@ -136,13 +136,13 @@ export const getAllSegmentation = async (req: Request, res: Response) => {
         if(!segmentation) {
             return res.status(500).json({ 
                 type: 'failed',
-                message: 'get all label ล้มเหลว', 
+                message: 'get all label failed', 
             })
         }
 
         return res.status(200).json({
             type: 'success',
-            message: 'get all label สำเร็จ',
+            message: 'get all label success',
             segmentation,
         })
         
@@ -191,7 +191,7 @@ export const CRUDPolygon = async (req: Request, res: Response) => {
             
         return res.status(200).json({
             type: 'success',
-            message: 'CRUD polygon สำเร็จ',
+            message: 'CRUD polygon success',
         })
         
 
@@ -210,7 +210,7 @@ export const getPolygon = async (req: Request, res: Response) => {
         if (data.length == 0) {
             return res.status(200).json({
                 type: 'failed',
-                message: 'ไม่มี polygon ในรูปภาพนี้',
+                message: 'There is no polygon in this image.',
 
             })
         }
@@ -278,7 +278,7 @@ export const delpolygon = async (req: Request, res: Response) => {
                 return res.status(200).json({
                     type: 'failed',
                     idpolygon: idpolygon[i],
-                    message: 'polygon ไม่มีในระบบ',
+                    message: 'polygon not found',
 
                 })
             }
@@ -288,7 +288,7 @@ export const delpolygon = async (req: Request, res: Response) => {
                 return res.status(200).json({
                     type: 'failed',
                     idpolygon: idpolygon[i],
-                    message: 'delete polygon ไม่สำเร็จ',
+                    message: 'delete polygon failed',
 
                 })
             }
@@ -296,7 +296,7 @@ export const delpolygon = async (req: Request, res: Response) => {
 
         return res.status(200).json({
             type: 'success',
-            message: 'delete polygon สำเร็จ',
+            message: 'delete polygon success',
 
         })
         
