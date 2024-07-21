@@ -4,6 +4,7 @@ import fs from 'fs'
 import path from "path";
 import sharp from 'sharp'
 import * as polygon_config from '../utils/polygon_config'
+import * as mapClassId from '../utils/mapClassId'
 const prisma = new PrismaClient()
 
 export const createClass = async (label_name: string, idproject: any) => {
@@ -339,6 +340,47 @@ export const delPolygon_by_segmentation = async (idsegmentation: any) => {
         
     } catch (error) {
         console.log("delete polygon ERROR!!")
+        throw error
+    }
+}
+
+export const export_polygon_YOLO = async (idsegmentation: any, allClass: any) => {
+    try {
+        
+
+        const polygons = await prisma.polygon.findMany({
+            where: {
+                idsegmentation
+            },
+            select: {
+                idsegmentation: true,
+                idpolygon: true,
+                xy_polygon: true,
+                segmentation_class_id: true,
+                user_id: true,
+            }
+        });
+
+        const modifiedBoundingBoxes = await Promise.all(polygons.map(async polygon => ({
+            idbounding_box: polygon.idpolygon,
+            xy_polygon: polygon.xy_polygon?.replace(/,/g, ' '),
+            segmentation_class_id: await mapClassId.segmentation_map_class(allClass, await prisma.segmentation_class.findUnique({
+                                                                            where:{
+                                                                                class_id: polygon.segmentation_class_id
+                                                                            },
+                                                                            select: {
+                                                                                class_label: true
+                                                                            }
+                                                                            })),
+            
+            user_id: polygon.user_id,
+        })));
+
+        return modifiedBoundingBoxes;
+
+        
+    } catch (error) {
+        console.log("export YOLO bounding_box ERROR!!")
         throw error
     }
 }

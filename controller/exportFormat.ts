@@ -39,6 +39,17 @@ export const exportAllFormat = async (req: Request, res: Response) => {
 
         if (type == 'segmentation') {
             if (format == 'YOLO') {
+                const zipFilePath = await exportTool.segmentation_YOLO(idproject) as string
+                
+                res.download(zipFilePath, (err) => {
+                    if (err) {
+                        console.error('Error sending file:', err);
+                        res.status(500).send('Error sending file');
+                    } else {
+                        console.log('File sent successfully');
+                        fs.unlinkSync(zipFilePath);
+                    }
+                });
             }
             if (format == 'COCO') {
                 
