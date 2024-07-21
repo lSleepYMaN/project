@@ -3,6 +3,7 @@ import * as projectModel from '../models/projectModel'
 import * as userModel from '../models/userModel'
 import * as imageModel from '../models/imageModel'
 import * as detectionModel from '../models/detectionModel'
+import * as segmentationModel from '../models/segmentationModel'
 import * as fileService from '../utils/fileService'
 import * as mapClassId from '../utils/mapClassId'
 const jwt = require('jsonwebtoken')
@@ -72,7 +73,7 @@ export const YOLO_detection = async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'data.yaml file not found' });
         }
         for (const label of labels) {
-            await detectionModel.createClass(label.label, idproject);
+            await segmentationModel.createClass(label.label, idproject);
         }
         const labelFiles = fs.readdirSync(labelsDir);
 
@@ -156,7 +157,6 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
         const token = req.cookies.token
         const user = jwt.verify(token, process.env.SECRET as string)
         const file = req.file
-        const projectName = req.body.projectName
         const idproject = parseInt(req.body.idproject)
         const projectPath = path.join(process.cwd(), 'uploads', idproject.toString());
 
@@ -172,7 +172,7 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
         const labelsDir = path.join(projectPath, 'train', 'labels');
 
         const labels: { index: number, label: string, projectId: number }[] = [];
-        const detections: any[] = [];
+        const segmentations: any[] = [];
 
         let img = path.join(__dirname, '../project_path', idproject.toString(), 'images')
 
@@ -190,7 +190,7 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
             fs.copyFileSync(path.join(imagesDir, imageFile), newFilePath);
             sharp(newFilePath).resize(200,200).toFile(thumbsPath)
 
-            await detectionModel.createDetection(imageFile, idproject)
+            await segmentationModel.createSegmentation(imageFile, idproject)
 
         }
 
@@ -212,7 +212,7 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'data.yaml file not found' });
         }
         for (const label of labels) {
-            await detectionModel.createClass(label.label, idproject);
+            await segmentationModel.createClass(label.label, idproject);
         }
         const labelFiles = fs.readdirSync(labelsDir);
 
@@ -222,27 +222,33 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
             const lines = content.split('\n');
             for (const line of lines) {
                 if (line.trim()) {
-                    const [classId, x_center, y_center, width, height] = line.split(' ');
+                    const values = line.split(' ')
+                    const classId = values[0]
+                    const x = values.shift()
+                    console.log('ClassID : ', classId)
+                    const polygons: string[] = []
+                    for(let i = 0; i < values.length; i+=2){
+                        const polygon = `${values[i]},${values[i+1]}`
+                        polygons.push(polygon)
+                    }
+                    const xy_polygon = polygons.join(' ')
                     const baseName = path.basename(labelFile, '.txt');
-                let imageFileName = `${baseName}.jpg`;
+                
+                    let imageFileName = `${baseName}.jpg`;
 
-                if (fs.existsSync(path.join(imagesDir, `${baseName}.png`))) {
+                    if (fs.existsSync(path.join(imagesDir, `${baseName}.png`))) {
                     imageFileName = `${baseName}.png`;
-                }
-                const imgPath = path.join(imagesDir, imageFileName)
-                const metadata = await sharp(imgPath).metadata();
-                const image_width = metadata.width;
-                const image_height = metadata.height;
-                    detections.push({
-                        classId: await mapClassId.map_detection_import(parseInt(classId),labels,idproject),
-                        x1: ((parseFloat(x_center)*image_width!) - ((parseFloat(width)*image_width!)/2))/image_width!,
-                        y1: ((parseFloat(y_center)*image_height!) - ((parseFloat(height)*image_height!)/2))/image_height!,
-                        x2: ((parseFloat(x_center)*image_width!) + ((parseFloat(width)*image_width!)/2))/image_width!,
-                        y2: ((parseFloat(y_center)*image_height!) + ((parseFloat(height)*image_height!)/2))/image_height!,
-                        user_id: user.id,
-                        image_path: imageFileName,
-                        idproject: idproject
-                    });
+                    }
+                    const imgPath = path.join(imagesDir, imageFileName)
+                    const metadata = await sharp(imgPath).metadata();
+                    console.log(labels)
+                        segmentations.push({
+                            classId: await mapClassId.map_segmentation_import(classId,labels,idproject),
+                            xy_polygon: xy_polygon,
+                            user_id: user.id,
+                            image_path: imageFileName,
+                            idproject: idproject
+                        });
                 }
             }
         }
@@ -267,26 +273,25 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
             })
             fs.rmdirSync(projectPath);
         }
-
-        const save_bbox = await detectionModel.create_import_Bounding_box(detections, user.id, idproject)
+        const save_polygon = await segmentationModel.create_import_Polygon(segmentations, user.id, idproject)
         
-        if (save_bbox == 0) {
+        if (save_polygon == 0) {
             return res.status(200).json({
                 type: 'failed',
-                message: 'import bbox ไม่สำเร็จ',
+                message: 'import polygon ไม่สำเร็จ',
 
             })
         }
 
-        if (save_bbox == 1) {
+        if (save_polygon == 1) {
             return res.status(200).json({
                 type: 'success',
-                message: 'import bbox สำเร็จ',
+                message: 'import polygon สำเร็จ',
             })
         }
         
     } catch (error) {
         console.error('error:', error);
-        return res.status(400).json({ error: 'upload YOLO detection ERROR!!' })
+        return res.status(400).json({ error: 'upload YOLO segmentation ERROR!!' })
     }
 }

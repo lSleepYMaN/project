@@ -6,5 +6,6 @@ const upload = multer({ dest: 'uploads/' });
 const router = express.Router()
 
 router.post('/import/detection/YOLO', upload.single('file'), uploadFormat.YOLO_detection)
+router.post('/import/segmentation/YOLO', upload.single('file'), uploadFormat.YOLO_segmentation)
 
 export default router

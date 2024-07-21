@@ -183,17 +183,16 @@ export const getPolygon_by_id = async (idpolygon: any) => {
     }
 }
 
-export const createSegmentation = async ( imageName: any[], idproject: any) => {
+export const createSegmentation = async ( imageName: any, idproject: any) => {
     try {
-        for (let i = 0; i < imageName.length; i++) {
-            let imagePath = path.join(__dirname, '../project_path', idproject.toString(), 'images', imageName[i])
+            let imagePath = path.join(__dirname, '../project_path', idproject.toString(), 'images', imageName)
             const metadata = await sharp(imagePath).metadata()
             const width = metadata.width
             const height = metadata.height
 
             await prisma.segmentation.create({
                 data: {
-                    image_path: imageName[i],
+                    image_path: imageName,
                     height_image: height,
                     width_image: width,
                     created_at: new Date(new Date().getTime()+(7*60*60*1000)),
@@ -201,7 +200,7 @@ export const createSegmentation = async ( imageName: any[], idproject: any) => {
                     idproject: idproject,
                 }
             })   
-        }
+
         
         
     } catch (error) {
@@ -383,4 +382,34 @@ export const export_polygon_YOLO = async (idsegmentation: any, allClass: any) =>
         console.log("export YOLO bounding_box ERROR!!")
         throw error
     }
+}
+
+export const create_import_Polygon = async (segmentation: any, user_id: any, idproject: any) => {
+    try {
+        for(let i = 0; segmentation.length; i++){
+            const get_segmentation = await prisma.segmentation.findMany({
+                where: {
+                    image_path: segmentation[i].image_path,
+                    idproject: idproject,
+                }
+            })
+            await prisma.polygon.create({
+                data: {
+                    xy_polygon: segmentation[i].xy_polygon,
+                    created_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                    updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                    user_id: segmentation[i].user_id,
+                    idsegmentation: get_segmentation[0].idsegmentation,
+                    segmentation_class_id: segmentation[i].classId
+                }
+            })
+        }
+        return 1
+        
+    } catch (error) {
+        console.log("create import polygon ERROR!!")
+        console.log("error",error)
+        return 0
+    }
+
 }

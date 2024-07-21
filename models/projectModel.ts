@@ -129,7 +129,7 @@ export const deleteProject = async (id: any) => {
         return true
         
     } catch (error) {
-        console.log("delete user_in_charge is ERROR!!")
+        console.log("delete project is ERROR!!")
         throw error
     }
 }
@@ -158,31 +158,40 @@ export const createFolder = async (idproject: any) => {
 }
 
 export const deleteFolder = async (dir: string) => {
-    const projectPath = path.join(__dirname, '../project_path', dir)
-    const projectPathIM = path.join(__dirname, '../project_path', dir, 'images')
-    const projectPathTH = path.join(__dirname, '../project_path', dir, 'thumbs')
+    const projectPath = path.join(__dirname, '../project_path', dir);
+    const projectPathIM = path.join(projectPath, 'images');
+    const projectPathTH = path.join(projectPath, 'thumbs');
+
     try {
-        if (fs.existsSync(projectPath)) {
-            fs.readdirSync(projectPathIM).forEach((file) => {
+        if (await fs.readdirSync(projectPathIM)) {
+            for (const file of await fs.readdirSync(projectPathIM)) {
                 const filePath = path.join(projectPathIM, file);
-                fs.unlinkSync(filePath);
-            })
-            fs.readdirSync(projectPathTH).forEach((file) => {
-                const filePath = path.join(projectPathTH, file);
-                fs.unlinkSync(filePath);
-            })
-            fs.rmdirSync(projectPathIM);
-            fs.rmdirSync(projectPathTH);
-            fs.rmdirSync(projectPath);
+                await fs.unlinkSync(filePath);
+            }
+            await fs.rmdirSync(projectPathIM);
         }
+
+        if (await fs.readdirSync(projectPathTH)) {
+            for (const file of await fs.readdirSync(projectPathTH)) {
+                const filePath = path.join(projectPathTH, file);
+                await fs.unlinkSync(filePath);
+            }
+            await fs.rmdirSync(projectPathTH);
+        }
+
+        if (fs.existsSync(projectPath)) {
+            await fs.rmdirSync(projectPath);
+        }
+
         console.log(`Folder ${dir} deleted successfully.`);
-            return true;
+        return true;
         
     } catch (error) {
-        console.log("delete folder is ERROR!!")
-        throw error
+        console.error('Error deleting folder:', error);
+        throw error;
     }
 }
+
 
 
 

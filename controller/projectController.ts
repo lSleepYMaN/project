@@ -171,16 +171,16 @@ export const deleteProject = async (req: Request, res: Response) => {
 
         for(let i = 0; i < getsegmentation.length; i++){
             const getPolygon = await segmentationModel.getPolygon(getsegmentation[i].idsegmentation)
-            // if (getPolygon.length != 0) {
-            //     await segmentationModel.delPolygon_by_segmentation(getsegmentation[i].idsegmentation)
-            // }
+            if (getPolygon.length != 0) {
+                await segmentationModel.delPolygon_by_segmentation(getsegmentation[i].idsegmentation)
+            }
             
         }
         
         const delproject = await projectModel.deleteProject(idproject)
 
         const dir = data_project?.root_path as string
-        const delFolder = projectModel.deleteFolder(dir)
+        const delFolder = await projectModel.deleteFolder(dir)
 
         if(!delUser_in_charge || !delproject) {
             return res.status(400).json({ 

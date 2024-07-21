@@ -40,3 +40,15 @@ export const segmentation_map_class = async (allClass: any, label_name: any) => 
     }
     return id
 }
+
+export const map_segmentation_import = async (class_id: any, allClass: any, idproject: any) => {
+    let id: any
+    for(let i = 0; i < allClass.length; i++){
+        if(class_id == allClass[i].index){
+            const getClass = await segmentationModel.getlabelName(idproject,allClass[i].label)
+            id = getClass[0].class_id
+            break
+        }
+    }
+    return id
+}
