@@ -6,10 +6,10 @@ const router = express.Router()
 
 router.post('/register', userController.registerUser)
 router.post('/login', userController.loginUser)
-router.post('/verify', check.checkAuth, userController.verifyUser)
+router.post('/verify', userController.verifyUser)
 router.post('/sendnewcode',userController.sendNewCode)
 router.post('/forgetPassword',userController.forgetPass)
-router.post('/newPassword',check.checkAuth2, userController.newPassword)
+router.post('/newPassword', userController.newPassword)
 
 router.get('/logout',userController.logoutUser)
 router.get('/users',check.checkAuth, userController.getAllUsers)

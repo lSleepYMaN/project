@@ -106,18 +106,18 @@ export const registerUser = async (req: Request, res: Response) => {
         }
 
         const code = sendEmail.genCode()
-        await sendEmail.sendMailToVerify(email)
+        await sendEmail.sendMailToVerify(email, code)
 
         const hashedPassword = await bcrypt.hash(password, 10)
 
         const newUser = await userModel.createUser(username, email, hashedPassword, code)
-        // const codeVer = jwt.sign({code: code}, process.env.SECRET as string, { expiresIn: '30m'})
-        //     res.cookie('code', codeVer, {
-        //         maxAge: 0.5*60*60*1000,
-        //         secure: true,
-        //         httpOnly: true,
-        //         sameSite: 'none',
-        // })
+        const verify = jwt.sign({id: newUser.id, username: newUser.username}, process.env.SECRET as string, { expiresIn: '30m'})
+            res.cookie('verify', verify, {
+                maxAge: 30*60*1000,
+                secure: true,
+                httpOnly: true,
+                sameSite: 'none',
+        })
         
         return res.status(200).json({
             type: 'success',
@@ -131,19 +131,20 @@ export const registerUser = async (req: Request, res: Response) => {
 }
 
 export const verifyUser = async (req: Request, res: Response) => {
-    const code = req.cookies.code
-    const verCode = jwt.verify(code, process.env.SECRET as string)
-    const getCode = await userModel.Verify(verCode.code)
+    const verify = req.cookies.verify
+    const code = req.body.code
+    const user = jwt.verify(verify, process.env.SECRET as string)
+    const getUser = await userModel.userById(user.id)
     try {
-        if (!getCode) {
+        if (code != getUser?.verified_code) {
             return res.status(400).json({
                 type: 'failed',
                 message: 'Verified is not correctly',
             })
         } else {
-            await userModel.updateVerifyCodeTonull(getCode.id)
-            await userModel.updateStatusTo0(getCode.id)
-            res.clearCookie('code')
+            await userModel.updateVerifyCodeTonull(getUser?.id)
+            await userModel.updateStatusTo0(getUser?.id)
+            res.clearCookie('verify')
             return res.status(200).json({
                 type: 'success',
                 message: 'Verify success',
@@ -158,12 +159,13 @@ export const verifyUser = async (req: Request, res: Response) => {
 }
 
 export const sendNewCode = async (req: Request, res: Response) => {
-    const findUser = await userModel.userById(req.session.userid)
-    const email = findUser?.email as string
+    const verify = req.cookies.verify
+    const user = jwt.verify(verify, process.env.SECRET as string)
+    const findUser = await userModel.userById(user.id)
     const code = sendEmail.genCode()
     try {
-        await sendEmail.sendMailToVerify(email)
-        await userModel.updateVerifyCode(req.session.userid, code)
+        await sendEmail.sendMailToVerify(findUser?.email!,code)
+        await userModel.updateVerifyCode(findUser?.id, code)
 
         return res.status(200).json({
             type: 'success',
@@ -191,9 +193,15 @@ export const loginUser = async (req: Request, res: Response) => {
         }
 
         if (findUser.status == -1) {
+            const verify = jwt.sign({id: findUser.id, username: findUser.username}, process.env.SECRET as string, { expiresIn: '30m'})
+            res.cookie('verify', verify, {
+                maxAge: 30*60*1000,
+                secure: true,
+                httpOnly: true,
+                sameSite: 'none',
+            })
             return res.status(400).json({
                 type: 'verify',
-                id: findUser.id,
                 message: 'Please verify.',
             })
         }
@@ -251,7 +259,7 @@ export const logoutUser = async (req: Request, res: Response) => {
 
 export const forgetPass = async (req: Request, res: Response) => {
     try {
-        const { email } = req.body
+        const email = req.body.email
         const findUser = await userModel.getEmail(email)
         if (!findUser) {
             return res.status(500).json({
@@ -259,15 +267,15 @@ export const forgetPass = async (req: Request, res: Response) => {
                 message: 'No user' 
             }) 
         }
-        const forgetPassToken = jwt.sign({id: findUser.id}, process.env.SECRET as string, { expiresIn: '24h'})
-        res.cookie('token', forgetPassToken, {
-            maxAge: 24*60*60*1000,
+        const forgetPassToken = jwt.sign({id: findUser.id}, process.env.SECRET as string, { expiresIn: '30m'})
+        res.cookie('forgetPass', forgetPassToken, {
+            maxAge: 30*60*1000,
             secure: true,
             httpOnly: true,
             sameSite: 'none',
         })
 
-        //await sendEmail.sendMailToForget(email)
+        await sendEmail.sendMailToForgetPass(findUser.email,findUser.username)
 
         return res.status(200).json({
             type: 'success',
@@ -282,19 +290,37 @@ export const forgetPass = async (req: Request, res: Response) => {
 
 export const newPassword = async (req: Request, res: Response) => {
     try {
-        const token = req.cookies.forgetPassToken
+        const token = req.cookies.forgetPass
         const user = jwt.verify(token, process.env.SECRET as string)
-        const { password } = req.body
+        const password = req.body.password
+        const conPassword = req.body.conPassword
+        const validPass = /^.{8,}$/.test(password)
+
+        if (!validPass) {
+            return res.status(400).json({ 
+                type: 'failed',
+                Attribute: 'password',
+                message: 'The password is incorrect.',
+            })
+        }
+
+        if (password != conPassword) {
+            return res.status(400).json({
+                type: 'failed',
+                message: 'Passwords are inconsistent.' 
+            })
+        }
+
         const hashedPassword = await bcrypt.hash(password,10)
         const updatePass = await userModel.updatePassUser(user.id, hashedPassword)
         if (!updatePass) {
-            res.clearCookie('forgetPassToken')
+            res.clearCookie('forgetPass')
             return res.status(400).json({ 
                 type: 'failed',
                 message: 'Update password error'
             })
         }
-        res.clearCookie('forgetPassToken')
+        res.clearCookie('forgetPass')
         return res.status(200).json({
             type: 'success',
             message: 'Update password success',

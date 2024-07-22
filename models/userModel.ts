@@ -33,7 +33,7 @@ export const createUser = async (username: string, email: string, password: stri
                 password,
                 created_at: new Date(new Date().getTime()+(7*60*60*1000)),
                 updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
-                verified_code: null//code
+                verified_code: code
             }
         })
         
