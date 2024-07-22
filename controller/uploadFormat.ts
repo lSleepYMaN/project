@@ -5,6 +5,7 @@ import * as imageModel from '../models/imageModel'
 import * as detectionModel from '../models/detectionModel'
 import * as segmentationModel from '../models/segmentationModel'
 import * as fileService from '../utils/fileService'
+import * as Admzip from 'adm-zip'
 import * as mapClassId from '../utils/mapClassId'
 const jwt = require('jsonwebtoken')
 import { parse } from 'yaml';
@@ -17,7 +18,6 @@ export const YOLO_detection = async (req: Request, res: Response) => {
         const token = req.cookies.token
         const user = jwt.verify(token, process.env.SECRET as string)
         const file = req.file
-        const projectName = req.body.projectName
         const idproject = parseInt(req.body.idproject)
         const projectPath = path.join(process.cwd(), 'uploads', idproject.toString());
 
@@ -46,7 +46,6 @@ export const YOLO_detection = async (req: Request, res: Response) => {
 
         for (const imageFile of imageFiles) {
             const newFilePath = path.join(storagePath, imageFile);
-            console.log("newFilePath : ", newFilePath)
             let thumbsPath = path.join(__dirname, '../project_path', idproject.toString(), 'thumbs', imageFile)
             fs.copyFileSync(path.join(imagesDir, imageFile), newFilePath);
             sharp(newFilePath).resize(200,200).toFile(thumbsPath)
@@ -73,7 +72,7 @@ export const YOLO_detection = async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'data.yaml file not found' });
         }
         for (const label of labels) {
-            await segmentationModel.createClass(label.label, idproject);
+            await detectionModel.createClass(label.label, idproject);
         }
         const labelFiles = fs.readdirSync(labelsDir);
 
