@@ -5,7 +5,7 @@ import * as imageModel from '../models/imageModel'
 import * as detectionModel from '../models/detectionModel'
 import * as segmentationModel from '../models/segmentationModel'
 import * as fileService from '../utils/fileService'
-import * as Admzip from 'adm-zip'
+const AdmZip = require('adm-zip')
 import * as mapClassId from '../utils/mapClassId'
 const jwt = require('jsonwebtoken')
 import { parse } from 'yaml';
@@ -25,7 +25,8 @@ export const YOLO_detection = async (req: Request, res: Response) => {
             fs.mkdirSync(projectPath, { recursive: true });
         }
         
-        await fileService.extractZip(file?.path!, projectPath,)
+        const zip = new AdmZip(file?.path!);
+        zip.extractAllTo(projectPath, true);
 
         fs.unlinkSync(file?.path!)
 
@@ -163,7 +164,8 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
             fs.mkdirSync(projectPath, { recursive: true });
         }
         
-        await fileService.extractZip(file?.path!, projectPath,)
+        const zip = new AdmZip(file?.path!);
+        zip.extractAllTo(projectPath, true);
 
         fs.unlinkSync(file?.path!)
 
