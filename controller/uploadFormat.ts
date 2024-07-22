@@ -4,7 +4,6 @@ import * as userModel from '../models/userModel'
 import * as imageModel from '../models/imageModel'
 import * as detectionModel from '../models/detectionModel'
 import * as segmentationModel from '../models/segmentationModel'
-import * as fileService from '../utils/fileService'
 const AdmZip = require('adm-zip')
 import * as mapClassId from '../utils/mapClassId'
 const jwt = require('jsonwebtoken')

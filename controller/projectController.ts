@@ -241,9 +241,19 @@ export const uploadImage = async (req: Request, res: Response) => {
 
 export const getImg = async (req: Request, res:Response) => {
     try {
-        const idproject = req.body.idproject
-        const Imgname = req.body.imgname
-        res.sendFile(path.join(__dirname, '../project_path', idproject, 'images', Imgname));
+        const idproject = parseInt(req.body.idproject)
+        const imgName = await imageModel.getImg(idproject)
+        if(imgName == 0){
+            return res.status(400).json({
+                type: 'failed',
+                message: 'get image fail'
+        })
+        }
+        return res.status(200).json({
+                type: 'success',
+                message: 'get image success',
+                imgName
+        })
         
     } catch (error) {
         console.error('error:', error);

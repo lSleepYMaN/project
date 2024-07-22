@@ -64,3 +64,40 @@ export const saveImage = async (idproject: any, images: Express.Multer.File[], t
     }
     
 }
+
+export const getImg = async (idproject: any) => {
+    try {
+        const detectionImg = await prisma.detection.findFirst({
+            where:{
+                idproject
+            }
+        })
+
+        if (!detectionImg) {
+            const segmentationImg = await prisma.segmentation.findFirst({
+                where:{
+                    idproject
+                }
+            })
+            if (!segmentationImg) {
+                const classificationImg = await prisma.classification.findFirst({
+                    where:{
+                        idproject
+                    }
+                })
+                if (!classificationImg) {
+                    return 0
+                }
+                return classificationImg?.image_path
+            }
+            return segmentationImg?.image_path
+        }
+
+        return detectionImg?.image_path
+        
+    } catch (error) {
+        console.error('Error get image:', error);
+        return false;
+    }
+}
+
