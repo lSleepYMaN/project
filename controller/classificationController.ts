@@ -92,7 +92,8 @@ export const getIMG = async (req: Request, res: Response) => {
         if (imgAll.length == 0) {
             return res.status(500).json({ 
                 type: 'failed',
-                message: 'no image in folder', 
+                message: 'no image in folder',
+                imgAll 
             })
         }
 
