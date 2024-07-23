@@ -6,6 +6,7 @@ import detectionRoutes from './routes/detectionRoute'
 import segmentationRoutes from './routes/segmentationRoute'
 import exportfile from './routes/exportfile'
 import importDataset from './routes/importDataset'
+import classificationRoute from './routes/classificationRoute'
 import session from 'express-session'
 import dotenv from 'dotenv'
 const cookie = require('cookie-parser')
@@ -25,7 +26,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookie())
 app.use(userRoutes, projectRoutes, detectionRoutes, segmentationRoutes, exportfile
-        ,importDataset
+        ,importDataset, classificationRoute
 )
 
 

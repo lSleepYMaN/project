@@ -4,6 +4,7 @@ import * as userModel from '../models/userModel'
 import * as imageModel from '../models/imageModel'
 import * as detectionModel from '../models/detectionModel'
 import * as segmentationModel from '../models/segmentationModel'
+import * as classificationModel from '../models/classificationModel'
 import path from "path";
 const jwt = require('jsonwebtoken')
 
@@ -158,6 +159,7 @@ export const deleteProject = async (req: Request, res: Response) => {
                 message: 'project not found', 
             })
         }
+        const index_length = await classificationModel.getAllClass(idproject)
         const delUser_in_charge = await projectModel.deleteUser_in_charge(idproject)
         const getdetection = await detectionModel.getAllDetection(idproject)
         const getsegmentation = await segmentationModel.getAllSegmentation(idproject)
@@ -180,7 +182,7 @@ export const deleteProject = async (req: Request, res: Response) => {
         const delproject = await projectModel.deleteProject(idproject)
 
         const dir = data_project?.root_path as string
-        const delFolder = await projectModel.deleteFolder(dir)
+        const delFolder = await projectModel.deleteFolder(dir, index_length.length)
 
         if(!delUser_in_charge || !delproject) {
             return res.status(400).json({ 

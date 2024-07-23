@@ -122,6 +122,9 @@ export const deleteProject = async (id: any) => {
         await prisma.segmentation_class.deleteMany({
             where: {idproject: id}
         })
+        await prisma.classification_class.deleteMany({
+            where:{idproject: id}
+        })
         await prisma.project.delete({
             where: {idproject: id}
         })
@@ -150,19 +153,36 @@ export const createFolder = async (idproject: any) => {
     let dirname: string = idproject.toString()
     const uploadDir1 = path.join(__dirname, '../project_path' , dirname, 'images')
     const uploadDir2 = path.join(__dirname, '../project_path' , dirname, 'thumbs')
+    const folderClassification = path.join(__dirname, '../project_path' , dirname, 'classification')
     fs.mkdirSync(uploadDir1, { recursive: true });
     fs.mkdirSync(uploadDir2, { recursive: true });
+    fs.mkdirSync(folderClassification, { recursive: true});
     
     return dirname as string
 
 }
 
-export const deleteFolder = async (dir: string) => {
+export const deleteFolder = async (dir: string, index_length: any) => {
     const projectPath = path.join(__dirname, '../project_path', dir);
     const projectPathIM = path.join(projectPath, 'images');
     const projectPathTH = path.join(projectPath, 'thumbs');
+    const projectPathCL = path.join(projectPath, 'classification');
 
     try {
+        if (await fs.readdirSync(projectPathCL)) {
+            for(let i = 0; i<index_length; i++){
+                const projectPathINDEX = path.join(projectPathCL, `${i}`);
+                if (await fs.readdirSync(projectPathINDEX)) {
+                    for (const file of await fs.readdirSync(projectPathINDEX)) {
+                        const filePath = path.join(projectPathINDEX, file);
+                        await fs.unlinkSync(filePath);
+                    }
+                    await fs.rmdirSync(projectPathINDEX);
+                }
+            }
+            await fs.rmdirSync(projectPathCL);
+        }
+
         if (await fs.readdirSync(projectPathIM)) {
             for (const file of await fs.readdirSync(projectPathIM)) {
                 const filePath = path.join(projectPathIM, file);
