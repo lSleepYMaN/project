@@ -60,20 +60,20 @@ export const uploadImage = async (req: Request, res: Response) => {
 export const getAllClass = async (req: Request, res: Response) => {
     try {
         const idproject = parseInt(req.params.idproject)
-        const getAllClass = await classificationModel.getAllClass(idproject)
+        const strClass = await classificationModel.getAllClass(idproject)
 
         if (getAllClass.length == 0) {
             return res.status(500).json({ 
                 type: 'failed',
                 message: 'no class', 
-                getAllClass
+                strClass
             })
         }
 
         return res.status(200).json({
             type: 'success',
             message: 'get class success',
-            getAllClass
+            strClass
         })
         
     } catch (error) {

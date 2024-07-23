@@ -51,6 +51,10 @@ export const getAllClass = async (idproject: any) => {
         return await prisma.classification_class.findMany({
             where:{
                 idproject
+            },
+            select:{
+                class_index: true,
+                class_label: true,
             }
         })
         
