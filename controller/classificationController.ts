@@ -66,6 +66,7 @@ export const getAllClass = async (req: Request, res: Response) => {
             return res.status(500).json({ 
                 type: 'failed',
                 message: 'no class', 
+                getAllClass
             })
         }
 
