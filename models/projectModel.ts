@@ -208,7 +208,7 @@ export const deleteFolder = async (dir: string, index_length: any) => {
         
     } catch (error) {
         console.error('Error deleting folder:', error);
-        throw error;
+        return true;
     }
 }
 

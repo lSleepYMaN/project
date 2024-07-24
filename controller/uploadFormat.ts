@@ -29,8 +29,8 @@ export const YOLO_detection = async (req: Request, res: Response) => {
 
         fs.unlinkSync(file?.path!)
 
-        const imagesDir = path.join(projectPath, 'train', 'images');
-        const labelsDir = path.join(projectPath, 'train', 'labels');
+        const imagesDir = path.join(projectPath, 'images');
+        const labelsDir = path.join(projectPath, 'labels');
 
         const labels: { index: number, label: string, projectId: number }[] = [];
         const detections: any[] = [];
@@ -107,8 +107,6 @@ export const YOLO_detection = async (req: Request, res: Response) => {
             }
         }
 
-        const trainDir = path.join(projectPath, 'train');
-
         if (fs.existsSync(projectPath)) {
             fs.readdirSync(imagesDir).forEach((file) => {
                 const filePath = path.join(imagesDir, file);
@@ -120,7 +118,6 @@ export const YOLO_detection = async (req: Request, res: Response) => {
             })
             fs.rmdirSync(imagesDir);
             fs.rmdirSync(labelsDir);
-            fs.rmdirSync(trainDir);
             fs.readdirSync(projectPath).forEach((file) => {
                 const filePath = path.join(projectPath, file);
                 fs.unlinkSync(filePath);
@@ -168,8 +165,8 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
 
         fs.unlinkSync(file?.path!)
 
-        const imagesDir = path.join(projectPath, 'train', 'images');
-        const labelsDir = path.join(projectPath, 'train', 'labels');
+        const imagesDir = path.join(projectPath, 'images');
+        const labelsDir = path.join(projectPath, 'labels');
 
         const labels: { index: number, label: string, projectId: number }[] = [];
         const segmentations: any[] = [];
@@ -253,7 +250,6 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
             }
         }
 
-        const trainDir = path.join(projectPath, 'train');
 
         if (fs.existsSync(projectPath)) {
             fs.readdirSync(imagesDir).forEach((file) => {
@@ -266,7 +262,6 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
             })
             fs.rmdirSync(imagesDir);
             fs.rmdirSync(labelsDir);
-            fs.rmdirSync(trainDir);
             fs.readdirSync(projectPath).forEach((file) => {
                 const filePath = path.join(projectPath, file);
                 fs.unlinkSync(filePath);
