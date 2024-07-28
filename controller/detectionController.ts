@@ -1,8 +1,6 @@
 import { Request, Response } from "express"
-import * as projectModel from '../models/projectModel'
-import * as userModel from '../models/userModel'
-import * as imageModel from '../models/imageModel'
 import * as detectionModel from '../models/detectionModel'
+import * as segmentationModel from '../models/segmentationModel'
 const jwt = require('jsonwebtoken')
 
 export const createDetectionClass = async (req: Request, res: Response) => {
@@ -17,6 +15,7 @@ export const createDetectionClass = async (req: Request, res: Response) => {
         }
 
         const create = await detectionModel.createClass(class_label, idproject)
+        const create2 = await segmentationModel.createClass(class_label, idproject)
 
         if(!create) {
             return res.status(500).json({ 

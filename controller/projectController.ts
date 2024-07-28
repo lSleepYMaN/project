@@ -206,7 +206,6 @@ export const uploadImage = async (req: Request, res: Response) => {
     try {
         const files = req.files as Express.Multer.File[]
         const idproject = parseInt(req.body.idproject)
-        const type = req.body.type as string
         
         if (!files || files.length === 0) {
             return res.status(400).json({ 
@@ -214,15 +213,8 @@ export const uploadImage = async (req: Request, res: Response) => {
                 message: 'No image uploaded'
             })
         }
-
-        if (type == null) {
-            return res.status(400).json({ 
-                type: 'failed',
-                message: 'Unable to specify save format'
-            })
-        }
         
-        const ress = await imageModel.saveImage(idproject, files, type)
+        const ress = await imageModel.saveImage(idproject, files)
         
         if(!ress){
             return res.status(400).json({
