@@ -51,6 +51,7 @@ export const YOLO_detection = async (req: Request, res: Response) => {
             sharp(newFilePath).resize(200,200).toFile(thumbsPath)
 
             await detectionModel.createDetection(imageFile, idproject)
+            await segmentationModel.createSegmentation(imageFile, idproject)
 
         }
 
@@ -73,6 +74,7 @@ export const YOLO_detection = async (req: Request, res: Response) => {
         }
         for (const label of labels) {
             await detectionModel.createClass(label.label, idproject);
+            await segmentationModel.createClass(label.label, idproject);
         }
         const labelFiles = fs.readdirSync(labelsDir);
 
@@ -170,6 +172,7 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
 
         const labels: { index: number, label: string, projectId: number }[] = [];
         const segmentations: any[] = [];
+        const detections: any[] = []
 
         let img = path.join(__dirname, '../project_path', idproject.toString(), 'images')
 
@@ -188,6 +191,7 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
             sharp(newFilePath).resize(200,200).toFile(thumbsPath)
 
             await segmentationModel.createSegmentation(imageFile, idproject)
+            await detectionModel.createDetection(imageFile, idproject)
 
         }
 
@@ -210,6 +214,7 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
         }
         for (const label of labels) {
             await segmentationModel.createClass(label.label, idproject);
+            await detectionModel.createClass(label.label, idproject)
         }
         const labelFiles = fs.readdirSync(labelsDir);
 
@@ -222,6 +227,14 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
                     const values = line.split(' ')
                     const classId = values[0]
                     const x = values.shift()
+                    const coordinates = line.split(' ').map(Number)
+                    const y = coordinates.shift()
+                    const xCoords = coordinates.filter((_, index) => index % 2 === 0);
+                    const yCoords = coordinates.filter((_, index) => index % 2 !== 0);
+                    const xMin = Math.min(...xCoords);
+                    const yMin = Math.min(...yCoords);
+                    const xMax = Math.max(...xCoords);
+                    const yMax = Math.max(...yCoords);
                     console.log('ClassID : ', classId)
                     const polygons: string[] = []
                     for(let i = 0; i < values.length; i+=2){
@@ -242,6 +255,17 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
                         segmentations.push({
                             classId: await mapClassId.map_segmentation_import(classId,labels,idproject),
                             xy_polygon: xy_polygon,
+                            user_id: user.id,
+                            image_path: imageFileName,
+                            idproject: idproject
+                        });
+
+                        detections.push({
+                            classId: await mapClassId.map_detection_import(parseInt(classId),labels,idproject),
+                            x1: xMin,
+                            y1: yMin,
+                            x2: xMax,
+                            y2: yMax,
                             user_id: user.id,
                             image_path: imageFileName,
                             idproject: idproject
@@ -269,6 +293,7 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
             fs.rmdirSync(projectPath);
         }
         const save_polygon = await segmentationModel.create_import_Polygon(segmentations, user.id, idproject)
+        const save_bbox = await detectionModel.create_import_Bounding_box(detections, user.id, idproject)
         
         if (save_polygon == 0) {
             return res.status(200).json({
