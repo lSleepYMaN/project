@@ -14,8 +14,11 @@ export const createProject = async (req: Request, res: Response) => {
     const user = jwt.verify(token, process.env.SECRET as string)
     try {
         
+        if (project_name.length == 0 || description.length == 0) {
+            return res.status(500).json({ error: 'Name or description is incorrect.' })
+        }
+        
         const checkName = await projectModel.getAllprojectByname(user.id, project_name, 1)
-        console.log(checkName[0])
         if (checkName[0]) {
             return res.status(500).json({ error: 'This name is already in use.' })
         }
@@ -43,6 +46,42 @@ export const createProject = async (req: Request, res: Response) => {
     }
 }
 
+export const updateProject = async (req: Request, res: Response) => {
+    try {
+        const { project_name, description } = req.body
+        const idproject = parseInt(req.body.idproject)
+        const token = req.cookies.token
+        const user = jwt.verify(token, process.env.SECRET as string)
+
+        if (project_name.length == 0 || description.length == 0) {
+            return res.status(500).json({ error: 'Name or description is incorrect.' })
+        }
+
+        const checkName = await projectModel.getAllprojectByname(user.id, project_name, 1)
+        console.log(checkName[0])
+        if (checkName[0]) {
+            return res.status(500).json({ error: 'This name is already in use.' })
+        }
+
+        const update = await projectModel.updateProject(idproject, project_name, description)
+
+        if(!update) {
+            return res.status(500).json({ 
+                type: 'failed',
+                message: 'update project failed', 
+            })
+        }
+
+        return res.status(200).json({
+            type: 'success',
+            message: 'update project success',
+        })
+        
+    } catch (error) {
+        console.error('error:', error);
+        return res.status(500).json({ error: 'update project ERROR!!!' })
+    }
+}
 
 export const createShareProject = async (req: Request, res: Response) => {
     const idproject = parseInt(req.body.idproject)

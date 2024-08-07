@@ -15,6 +15,7 @@ router.get('/allProject', check.checkAuth, projectController.getAllproject)
 router.get('/allProject/share', check.checkAuth, projectController.getShareproject)
 router.get('/project/:id', check.checkAuth, projectController.getprojectById )
 
+router.put('/updateProject', check.checkAuth, projectController.updateProject)
 
 router.delete('/delete/project', check.checkAuth, projectController.deleteProject)
 

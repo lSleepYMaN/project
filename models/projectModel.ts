@@ -23,6 +23,25 @@ export const createProject = async (projectName: string, projectDes: string) => 
     }
 }
 
+export const updateProject = async (idproject: any, projectName: string, projectDes: string) => {
+    try {
+        return await prisma.project.update({
+            where: {
+                idproject
+            },
+            data:{
+                project_name: projectName,
+                description: projectDes,
+                updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
+            }
+        })
+        
+    } catch (error) {
+        console.log("update project is ERROR!!")
+        throw error
+    }
+}
+
 export const root_pathUP = async (idproject: any) => {
     try {
         return await prisma.project.update({
