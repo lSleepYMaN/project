@@ -40,7 +40,8 @@ export const uploadImage = async (req: Request, res: Response) => {
         let fileNames: string[] = []
        for (let i = 0; i < files.length; i++){
             const image = files[i]
-            const fileName = `${fileCount.toString().padStart(8, '0')}${path.extname(image.originalname)}`
+            const originalName = path.basename(image.originalname, path.extname(image.originalname));
+            const fileName = `${fileCount.toString().padStart(8, '0')}_${originalName}${path.extname(image.originalname)}`;
             fileCount += 1
             let filePath = path.join(dirUpload,fileName)
             fs.writeFileSync(filePath, image.buffer)

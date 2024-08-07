@@ -13,7 +13,8 @@ export const saveImage = async (idproject: any, images: Express.Multer.File[]) =
         let fileNames: string[] = []
        for (let i = 0; i < images.length; i++){
             const image = images[i]
-            const fileName = `${fileCount.toString().padStart(8, '0')}${path.extname(image.originalname)}`
+            const originalName = path.basename(image.originalname, path.extname(image.originalname));
+            const fileName = `${fileCount.toString().padStart(8, '0')}_${originalName}${path.extname(image.originalname)}`;
             fileCount += 1
             let filePath = path.join(__dirname, '../project_path', idproject.toString(), 'images',fileName)
             let thumbsPath = path.join(__dirname, '../project_path', idproject.toString(), 'thumbs',fileName)
