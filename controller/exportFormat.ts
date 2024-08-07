@@ -3,9 +3,11 @@ import { Request, Response } from "express"
 import * as exportTool from '../utils/exportTool'
 const archiver = require('archiver');
 import fs from 'fs'
+import path from "path";
 
 
 const prisma = new PrismaClient();
+
 
 export const exportAllFormat = async (req: Request, res: Response) => {
     try {
@@ -20,16 +22,13 @@ export const exportAllFormat = async (req: Request, res: Response) => {
         if (type == 'detection') {
             if (format == 'YOLO') {
                 const zipFilePath = await exportTool.detection_YOLO(idproject) as string
-                
-                res.download(zipFilePath, (err) => {
-                    if (err) {
-                        console.error('Error sending file:', err);
-                        res.status(500).send('Error sending file');
-                    } else {
-                        console.log('File sent successfully');
-                        fs.unlinkSync(zipFilePath);
-                    }
-                });
+                const letter = zipFilePath.split('\\')
+                const fileName = letter[letter.length-1] as string
+                return res.status(200).json({
+                    type: 'success',
+                    message: 'upload image success',
+                    fileName
+                })
                 
             }
             if (format == 'COCO') {
@@ -40,34 +39,45 @@ export const exportAllFormat = async (req: Request, res: Response) => {
         if (type == 'segmentation') {
             if (format == 'YOLO') {
                 const zipFilePath = await exportTool.segmentation_YOLO(idproject) as string
-                
-                res.download(zipFilePath, (err) => {
-                    if (err) {
-                        console.error('Error sending file:', err);
-                        res.status(500).send('Error sending file');
-                    } else {
-                        console.log('File sent successfully');
-                        fs.unlinkSync(zipFilePath);
-                    }
-                });
+                const letter = zipFilePath.split('\\')
+                const fileName = letter[letter.length-1] as string
+                return res.status(200).json({
+                    type: 'success',
+                    message: 'upload image success',
+                    fileName
+                })
+
             }
             if (format == 'COCO') {
                 
             }
         }
-        
-        // res.download(zipFilePath, (err) => {
-        //     if (err) {
-        //         console.error('Error sending file:', err);
-        //         res.status(500).send('Error sending file');
-        //     } else {
-        //         console.log('File sent successfully');
-        //         fs.unlinkSync(zipFilePath);
-        //     }
-        // });
 
     } catch (error) {
         console.error('error:', error);
         return res.status(400).json({ error: 'export detection YOLO ERROR!!!' });
     }
 }
+
+export const downloadFile = (req: Request, res: Response) => {
+    const fileName = req.body.filePath as string;
+    const idproject = req.body.idproject as string
+    if (!fileName) {
+        return res.status(400).send('File path is required');
+    }
+
+    const fullFilePath = path.join(__dirname, '..', 'project_path', idproject, fileName);
+    if (fs.existsSync(fullFilePath)) {
+        res.download(fullFilePath, (err) => {
+            if (err) {
+                console.error('Error sending file:', err);
+                res.status(500).send('Error sending file');
+            } else {
+                console.log('File sent successfully');
+                fs.unlinkSync(fullFilePath);
+            }
+        });
+    } else {
+        res.status(404).send('File not found');
+    }
+};
