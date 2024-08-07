@@ -135,6 +135,24 @@ export const getAllSegmentation = async (idproject: any) => {
     }
 }
 
+export const getSegmentationByImg = async (idproject: any, img: string) => {
+    try {
+        return await prisma.segmentation.findMany({
+            where: {idproject: idproject, image_path: img},
+            select: {
+                idsegmentation: true,
+                image_path: true,
+                height_image: true,
+                width_image: true,
+            }
+        })
+        
+    } catch (error) {
+        console.log("get detection ERROR!!")
+        throw error
+    }
+}
+
 export const getPolygon = async (idsegmentation: any) => {
     try {
         const whIMG = await prisma.segmentation.findUnique({

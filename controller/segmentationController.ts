@@ -71,6 +71,7 @@ export const updateClass = async (req: Request, res: Response) => {
         const idproject = parseInt(req.body.idproject)
         const class_id = parseInt(req.body.class_id)
         const label_name = req.body.class_label
+        const getLabel_name = await segmentationModel.getLabelByID(class_id)
         const check_label = await segmentationModel.getlabelName(idproject, label_name)
         if (check_label.length != 0) {
             return res.status(500).json({ 
@@ -79,6 +80,8 @@ export const updateClass = async (req: Request, res: Response) => {
             })
         }
         const uplabel = await segmentationModel.updateClassName(class_id, label_name)
+        const getDeClass = await detectionModel.getlabelName(idproject, getLabel_name[0].class_label)
+        const uplabel2 = await detectionModel.updateClassName(getDeClass[0].class_id, label_name)
         if(!uplabel) {
             return res.status(500).json({ 
                 type: 'failed',
@@ -99,7 +102,9 @@ export const updateClass = async (req: Request, res: Response) => {
 
 export const delLabel = async (req: Request, res: Response) => {
     try {
-        const class_id = parseInt(req.params.class_id)
+        const class_id = parseInt(req.body.class_id)
+        const idproject = parseInt(req.body.idproject)
+        const getLabel_name = await segmentationModel.getLabelByID(class_id)
         const check_label = await segmentationModel.getLabelByID(class_id)
         if (check_label.length == 0) {
             return res.status(500).json({ 
@@ -107,7 +112,9 @@ export const delLabel = async (req: Request, res: Response) => {
                 message: 'label not found', 
             })
         }
+        const getDeClass = await detectionModel.getlabelName(idproject, getLabel_name[0].class_label)
         const delclass = segmentationModel.delLabel(class_id)
+        const delclass2 = detectionModel.delLabel(getDeClass[0].class_id)
 
         if(!delclass) {
             return res.status(500).json({ 

@@ -241,7 +241,7 @@ export const getImg = async (req: Request, res:Response) => {
             return res.status(400).json({
                 type: 'failed',
                 message: 'get image fail'
-        })
+            })
         }
         return res.status(200).json({
                 type: 'success',
@@ -252,5 +252,30 @@ export const getImg = async (req: Request, res:Response) => {
     } catch (error) {
         console.error('error:', error);
         return res.status(500).json({ error: 'get Img ERROR!!' })
+    }
+}
+
+export const delImg = async (req: Request, res:Response) => {
+    try {
+        const idproject = parseInt(req.body.idproject)  
+        const imgName = req.body.imgName as string
+        const type = req.body.type
+
+        if (type == 'classification') {
+            
+        } else if (type == 'detection'|| type == 'segmentation') {
+            const get_Detection =  detectionModel.getDetectionByImg(idproject, imgName)
+            const get_segmentation = segmentationModel.getSegmentationByImg(idproject, imgName)
+
+        } else {
+            return res.status(400).json({
+                type: 'failed',
+                message: 'type is incorrect'
+            })
+        }
+        
+    } catch (error) {
+        console.error('error:', error);
+        return res.status(500).json({ error: 'Delete Img ERROR!!' })
     }
 }

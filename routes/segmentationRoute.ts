@@ -14,6 +14,6 @@ router.get('/segmentation/allSegmentation/:idproject', check.checkAuth, segmenta
 router.put('/update/segmentation/class', check.checkAuth, segmentationController.updateClass)
 
 router.delete('/delete/segmentation/polygon', check.checkAuth, segmentationController.delpolygon)
-router.delete('/delete/segmentation/class/:class_id', check.checkAuth, segmentationController.delLabel)
+router.delete('/delete/segmentation/class', check.checkAuth, segmentationController.delLabel)
 
 export default router

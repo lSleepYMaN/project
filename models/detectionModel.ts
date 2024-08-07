@@ -160,6 +160,24 @@ export const getAllDetection = async (idproject: any) => {
     }
 }
 
+export const getDetectionByImg = async (idproject: any, img: string) => {
+    try {
+        return await prisma.detection.findMany({
+            where: {idproject: idproject, image_path: img},
+            select: {
+                iddetection: true,
+                image_path: true,
+                height_image: true,
+                width_image: true,
+            }
+        })
+        
+    } catch (error) {
+        console.log("get detection ERROR!!")
+        throw error
+    }
+}
+
 export const getBounding_box = async (iddetection: any) => {
     try {
         const whIMG = await prisma.detection.findUnique({
