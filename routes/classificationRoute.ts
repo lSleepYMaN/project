@@ -12,4 +12,8 @@ router.post('/create/classification/label', check.checkAuth, classificationContr
 router.post('/classification/uploadImage', check.checkAuth, upload.array('image'), classificationController.uploadImage)
 router.post('/classification/getImg', check.checkAuth, classificationController.getIMG)
 
+router.put('/classification/updateClass', check.checkAuth, classificationController.updateClass)
+
+router.delete('/classification/deleteClass', check.checkAuth, classificationController.delClass)
+
 export default router

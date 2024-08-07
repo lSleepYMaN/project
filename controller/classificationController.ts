@@ -109,3 +109,55 @@ export const getIMG = async (req: Request, res: Response) => {
         return res.status(500).json({ error: 'get classification class ERROR!!' })
     }
 }
+
+export const updateClass = async (req: Request, res: Response) => {
+    try {
+        const idproject = parseInt(req.body.idproject)
+        const index = parseInt(req.body.index)
+        const class_label = req.body.class_label
+
+        const update = await classificationModel.updateClass(idproject, index, class_label)
+
+        if (!update) {
+            return res.status(500).json({ 
+                type: 'failed',
+                message: 'update class failed',
+            })
+        }
+
+        return res.status(200).json({
+            type: 'success',
+            message: 'update class success',
+            update
+        })
+        
+    } catch (error) {
+        console.error('error:', error);
+        return res.status(500).json({ error: 'update class ERROR!!' })
+    }
+}
+
+export const delClass = async (req: Request, res: Response) => {
+    try {
+        const idproject = parseInt(req.body.idproject)
+        const index = parseInt(req.body.index)
+
+        const delClass = await classificationModel.delClass(idproject, index)
+        
+        if (!delClass) {
+            return res.status(500).json({ 
+                type: 'failed',
+                message: 'delete class failed',
+            })
+        }
+
+        return res.status(200).json({
+            type: 'success',
+            message: 'delete class success',
+        })
+
+    } catch (error) {
+        console.error('error:', error);
+        return res.status(500).json({ error: 'update class ERROR!!' })
+    }
+}
