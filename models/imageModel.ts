@@ -92,3 +92,38 @@ export const getImg = async (idproject: any) => {
     }
 }
 
+export const delImg = async (idproject: any, imgName: any ) => {
+    try {
+        const projectPath = path.join(__dirname, '../project_path', idproject.toString());
+        const projectPathIM = path.join(projectPath, 'images');
+        const projectPathTH = path.join(projectPath, 'thumbs');
+
+        const filePath = path.join(projectPathIM, imgName);
+        await fs.unlinkSync(filePath);
+
+        const filePathth = path.join(projectPathTH, imgName);
+        await fs.unlinkSync(filePathth);
+
+        console.log(`image ${imgName} deleted successfully.`);
+        return true;
+        
+    } catch (error) {
+        console.error('Error deleting image:', error);
+        return true;
+    }
+}
+
+export const delImgClassification = async (idproject: any, imgName: any, index: any) => {
+    try {
+        const filePath = path.join(__dirname, '../project_path', idproject.toString(), 'classification', index.toString(), imgName.toString()) ;
+        await fs.unlinkSync(filePath);
+
+        console.log(`image ${imgName} deleted successfully.`);
+        return true;
+        
+    } catch (error) {
+        console.error('Error deleting image:', error);
+        return true;
+    }
+}
+

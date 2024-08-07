@@ -103,11 +103,6 @@ export const delLabel = async (class_id: any) => {
                 }
             })
         }
-        await prisma.bounding_box.deleteMany({
-            where: {
-                detection_class_id: class_id
-            }
-        })
 
         return await prisma.detection_class.delete({
             where: {
@@ -308,6 +303,31 @@ export const createDetection = async ( imageName: any, idproject: any) => {
     } catch (error) {
         console.log("create detection ERROR!!")
         throw error
+    }
+}
+
+export const delDetectionbyId = async (iddetection: any) => {
+    try {
+        const check_bbox = await prisma.bounding_box.findMany({
+            where: {
+                iddetection: iddetection
+            }
+        })
+        if (check_bbox.length != 0) {
+            await prisma.bounding_box.deleteMany({
+                where: {
+                    iddetection: iddetection
+                }
+            })
+        }
+
+        return await prisma.detection.delete({
+            where: {
+                iddetection
+            }
+        })
+    } catch (error) {
+        
     }
 }
 

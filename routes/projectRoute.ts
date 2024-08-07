@@ -18,5 +18,6 @@ router.get('/project/:id', check.checkAuth, projectController.getprojectById )
 router.put('/updateProject', check.checkAuth, projectController.updateProject)
 
 router.delete('/delete/project', check.checkAuth, projectController.deleteProject)
+router.delete('/delete/image', check.checkAuth, projectController.delImg)
 
 export default router

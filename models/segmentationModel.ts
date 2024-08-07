@@ -227,6 +227,32 @@ export const createSegmentation = async ( imageName: any, idproject: any) => {
     }
 }
 
+export const delSegmentationbyId = async (idsegmentation: any) => {
+    try {
+        const check_bbox = await prisma.polygon.findMany({
+            where: {
+                idsegmentation
+            }
+        })
+        if (check_bbox.length != 0) {
+            await prisma.polygon.deleteMany({
+                where: {
+                    idsegmentation
+                }
+            })
+        }
+
+        return await prisma.segmentation.delete({
+            where: {
+                idsegmentation
+            }
+        })
+    } catch (error) {
+        console.log("delete segmentation ERROR!!")
+        throw error
+    }
+}
+
 export const createPolygon = async (polygon: string, idsegmentation: any, segmentation_class_label: any, user_id: any, idproject: any) => {
     try {
 

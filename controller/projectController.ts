@@ -6,6 +6,7 @@ import * as detectionModel from '../models/detectionModel'
 import * as segmentationModel from '../models/segmentationModel'
 import * as classificationModel from '../models/classificationModel'
 import path from "path";
+import fs from 'fs'
 const jwt = require('jsonwebtoken')
 
 export const createProject = async (req: Request, res: Response) => {
@@ -13,7 +14,7 @@ export const createProject = async (req: Request, res: Response) => {
     const token = req.cookies.token
     const user = jwt.verify(token, process.env.SECRET as string)
     try {
-        
+
         if (project_name.length == 0 || description.length == 0) {
             return res.status(500).json({ error: 'Name or description is incorrect.' })
         }
@@ -299,12 +300,27 @@ export const delImg = async (req: Request, res:Response) => {
         const idproject = parseInt(req.body.idproject)  
         const imgName = req.body.imgName as string
         const type = req.body.type
+        const index = parseInt(req.body.index)
 
         if (type == 'classification') {
-            
+            const deleteImg = await imageModel.delImgClassification(idproject, imgName, index)
+            return res.status(200).json({
+                type: 'success',
+                message: 'delete image success',
+                imgName
+            })
+
         } else if (type == 'detection'|| type == 'segmentation') {
-            const get_Detection =  detectionModel.getDetectionByImg(idproject, imgName)
-            const get_segmentation = segmentationModel.getSegmentationByImg(idproject, imgName)
+            const get_Detection = await detectionModel.getDetectionByImg(idproject, imgName)
+            const get_segmentation = await segmentationModel.getSegmentationByImg(idproject, imgName)
+            await detectionModel.delDetectionbyId(get_Detection[0].iddetection)
+            await segmentationModel.delSegmentationbyId(get_segmentation[0].idsegmentation)
+            const deleteImg = await imageModel.delImg(idproject, imgName)
+            return res.status(200).json({
+                type: 'success',
+                message: 'delete image success',
+                imgName
+            })
 
         } else {
             return res.status(400).json({
