@@ -46,7 +46,7 @@ export const sendMailToForgetPass = async (email: string, username: string) => {
           subject: 'Verify with code',
           html: `<h1>You are <strong>${username}</strong> ?</h1>
                   <h2>Click the link to change password.</h2>
-                  <h3>Click <a href="${process.env.ORIGIN_URL}/auth/forget/re-pass">New Password</a></h3>`,
+                  <h3>Click <a href="${process.env.ORIGIN_URL}/sign-in/forgot/re-type">New Password</a></h3>`,
         };
       
         try {
