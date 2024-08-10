@@ -54,7 +54,7 @@ export const detection_YOLO = async (idproject: any) => {
 
         const yamlNames = allClass.map((name, index) => `  ${index}: ${name}`).join('\n');
         const yamlContent = `path: .
-train: train/images
+train: train
 names:
 ${yamlNames}`
 
@@ -158,7 +158,7 @@ export const segmentation_YOLO = async (idproject: any) => {
 
         const yamlNames = allClass.map((name, index) => `  ${index}: ${name}`).join('\n');
         const yamlContent = `path: .
-train: train/images
+train: train
 names:
 ${yamlNames}`
 
@@ -219,7 +219,6 @@ export const classification_export = async (idproject: any) => {
     try {
         const label = await classificationModel.getAllClass(idproject)
         const project = await projectModel.getprojectById(idproject);
-        const allClass: string[] = [];
         const dir = project?.project_name;
         const train = path.join(dir!, 'train');
 
@@ -231,7 +230,7 @@ export const classification_export = async (idproject: any) => {
         }
         
         for(let i = 0; i < label.length; i++){
-            const class_path = path.join(train, `${label[i].class_label}`)
+            const class_path = path.join(train, `${label[i].class_index}`)
             const imagePath = path.join(__dirname, '..', 'project_path', `${idproject}`, 'classification', `${label[i].class_index}`);
             if (!fs.existsSync(class_path)) {
                 fs.mkdirSync(class_path);
@@ -245,6 +244,17 @@ export const classification_export = async (idproject: any) => {
             }
 
         }
+
+        let yamlNames = '';
+        for (let i = 0; i < label.length; i++) {
+            yamlNames += `  ${label[i].class_index}: ${label[i].class_label}\n`;
+        }
+const yamlContent = `path: .
+train: train
+names:
+${yamlNames}`;
+
+        fs.writeFileSync(path.join(dir!, 'data.yaml'), yamlContent);
 
         const zipFilePath = path.join(__dirname, '..', 'project_path', `${idproject}`, `${project?.project_name}.zip`);
         const zipFile = fs.createWriteStream(zipFilePath);
