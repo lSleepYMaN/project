@@ -16,7 +16,14 @@ export const exportAllFormat = async (req: Request, res: Response) => {
         const format = req.body.format
 
         if (type == 'classification') {
-            
+            const zipFilePath = await exportTool.classification_export(idproject) as string
+            const letter = zipFilePath.split('\\')
+                const fileName = letter[letter.length-1] as string
+            return res.status(200).json({
+                type: 'success',
+                message: 'upload image success',
+                fileName
+            })
         }
 
         if (type == 'detection') {

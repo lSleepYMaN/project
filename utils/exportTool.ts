@@ -1,6 +1,7 @@
 import * as detectionModel from '../models/detectionModel'
 import * as projectModel from '../models/projectModel'
 import * as segmentationModel from '../models/segmentationModel'
+import * as classificationModel from '../models/classificationModel'
 import fs from 'fs'
 import path from "path";
 const archiver = require('archiver');
@@ -205,6 +206,67 @@ mixup: 0`
 
             archive.pipe(zipFile);
             archive.directory(YOLOdir, false);
+            archive.finalize();
+        });
+
+    } catch (error) {
+        console.error('error:', error);
+        throw new Error('Failed to export YOLO data');
+    }
+}
+
+export const classification_export = async (idproject: any) => {
+    try {
+        const label = await classificationModel.getAllClass(idproject)
+        const project = await projectModel.getprojectById(idproject);
+        const allClass: string[] = [];
+        const dir = project?.project_name;
+        const train = path.join(dir!, 'train');
+
+        if (!fs.existsSync(dir!)) {
+            fs.mkdirSync(dir!);
+        }
+        if (!fs.existsSync(train)) {
+            fs.mkdirSync(train);
+        }
+        
+        for(let i = 0; i < label.length; i++){
+            const class_path = path.join(train, `${label[i].class_label}`)
+            const imagePath = path.join(__dirname, '..', 'project_path', `${idproject}`, 'classification', `${label[i].class_index}`);
+            if (!fs.existsSync(class_path)) {
+                fs.mkdirSync(class_path);
+            }
+            const files = fs.readdirSync(imagePath);
+
+            for (let j = 0; j < files.length; j++) {
+                const sourceFile = path.join(imagePath, files[j]);
+                const destinationFile = path.join(class_path, files[j]);
+                fs.copyFileSync(sourceFile, destinationFile);
+            }
+
+        }
+
+        const zipFilePath = path.join(__dirname, '..', 'project_path', `${idproject}`, `${project?.project_name}.zip`);
+        const zipFile = fs.createWriteStream(zipFilePath);
+        const archive = archiver('zip', {
+            zlib: { level: 9 }
+        });
+
+        return new Promise<string>((resolve, reject) => {
+            zipFile.on('close', () => {
+                console.log(`Created zip file with ${archive.pointer()} total bytes`);
+                rimraf.sync(dir!);
+                console.log('Directory removed successfully');
+                resolve(zipFilePath);
+            });
+
+            zipFile.on('error', (err) => {
+                console.error('Error creating zip file:', err);
+                reject(err);
+            });
+
+            archive.pipe(zipFile);
+            archive.directory(dir, false);
             archive.finalize();
         });
 
