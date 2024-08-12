@@ -5,6 +5,7 @@ const router = express.Router()
 
 router.post('/create/detection/label', check.checkAuth, detectionController.createDetectionClass)
 router.post('/create/detection/bounding_box', check.checkAuth, detectionController.CRUDBounding_box)
+router.post('/convert/detection', check.checkAuth, detectionController.detection_to_classification)
 
 router.get('/detection/class/:idproject', check.checkAuth, detectionController.getAllClass)
 router.get('/detection/bounding_box/:iddetection', check.checkAuth, detectionController.getBounding_box)

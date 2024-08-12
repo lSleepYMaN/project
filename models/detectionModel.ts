@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import * as mapClassId from '../utils/mapClassId'
+import * as classificationModel from './classificationModel'
 import { dir } from "console";
 import fs from 'fs'
 import path from "path";
@@ -546,6 +547,44 @@ export const delBounding_box_by_detection = async (iddetection: any) => {
         
     } catch (error) {
         console.log("delete bounding box ERROR!!")
+        throw error
+    }
+}
+
+export const detection_to_classification = async (idproject: any, detection_class: any) => {
+    try {
+        const bboxs = await prisma.bounding_box.findMany({
+            where: {
+                detection_class_id: detection_class.class_id
+            }
+        })
+
+        let num_image = 0
+        const create_class = await classificationModel.createClass(idproject, detection_class.class_label)
+        const indexFolder = path.join(__dirname, '../project_path' , `${idproject}`, 'classification', `${create_class.class_index}`)
+        fs.mkdirSync(indexFolder, { recursive: true});
+
+        for(let i = 0; i < bboxs.length; i++){
+            const detection = await prisma.detection.findUnique({
+                where: {
+                    iddetection: bboxs[i].iddetection
+                }
+            })
+            let image_path = path.join(__dirname, '../project_path' , `${idproject}`, 'images', `${detection?.image_path}`)
+            let width = Math.round((bboxs[i].x2!*detection?.width_image!) - (bboxs[i].x1!*detection?.width_image!))
+            let height = Math.round((bboxs[i].y2!*detection?.height_image!) - (bboxs[i].y1!*detection?.height_image!))
+            let fileCount = fs.readdirSync(indexFolder).length + 1
+            let fileName: string = `${fileCount.toString().padStart(8, '0')}.jpg`
+            await sharp(image_path)
+            .extract({ left: Math.round((bboxs[i].x1!*detection?.width_image!)), top: Math.round((bboxs[i].y1!*detection?.height_image!)), width: Math.round(width), height: Math.round(height) })
+            .toFile(path.join(indexFolder, fileName));
+            num_image ++
+        }
+
+        return num_image
+        
+    } catch (error) {
+        console.log("Convert detection to classification by one ERROR!!")
         throw error
     }
 }

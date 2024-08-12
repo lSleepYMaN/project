@@ -1,6 +1,7 @@
 import { Request, Response } from "express"
 import * as detectionModel from '../models/detectionModel'
 import * as segmentationModel from '../models/segmentationModel'
+import * as classificationModel from '../models/classificationModel'
 const jwt = require('jsonwebtoken')
 
 export const createDetectionClass = async (req: Request, res: Response) => {
@@ -281,32 +282,6 @@ export const getBounding_box = async (req: Request, res: Response) => {
     }
 }
 
-// export const updateBounding_box = async (req: Request, res: Response) => {
-//     try {
-//         const token = req.cookies.token
-//         const user = jwt.verify(token, process.env.SECRET as string)
-//         const bounding_box = req.body.bounding_box
-//         let length = bounding_box.length
-
-//         for(let i = 0; i < length; i++) {
-//             const update = detectionModel.updateBounding_box(bounding_box[i].idbounding_box,bounding_box[i].x1
-//                                                             ,bounding_box[i].x2,bounding_box[i].y1
-//                                                             ,bounding_box[i].y2,bounding_box[i].class_id
-//                                                             ,user.id
-//                                                             )
-//         }
-//         return res.status(200).json({
-//             type: 'success',
-//             message: 'update bounding box สำเร็จ',
-
-//         })
-        
-//     } catch (error) {
-//         console.error('error:', error);
-//         return res.status(500).json({ error: 'update bounding box ERROR!!' })
-//     }
-// }
-
 export const delBounding_box = async (req: Request, res: Response) => {
     try {
         const idbounding_box = req.body.idbounding_box
@@ -342,5 +317,38 @@ export const delBounding_box = async (req: Request, res: Response) => {
     } catch (error) {
         console.error('error:', error);
         return res.status(500).json({ error: 'delete bounding box ERROR!!' })
+    }
+}
+
+export const detection_to_classification = async (req: Request, res:Response) => {
+    try {
+        const idproject = parseInt(req.body.idproject)
+        const checkClassification = await classificationModel.getAllClass(idproject)
+        if (checkClassification.length != 0) {
+            return res.status(200).json({
+                type: 'failed',
+                message: 'This project have classification data',
+            })
+        }
+        const allClass = await detectionModel.getAllLabel(idproject)
+        let total = 0
+        
+        for(let i = 0; i < allClass.length; i++){
+            const create = await detectionModel.detection_to_classification(idproject, allClass[i])
+            console.log(`create ${create} image`)
+            total += create
+        }
+        
+        console.log(`create total ${total} image`)
+
+        return res.status(200).json({
+            type: 'success',
+            message: 'Convert detection to classification success',
+
+        })
+
+    } catch (error) {
+        console.error('error:', error);
+        return res.status(500).json({ error: 'Convert detection to classification ERROR!!' })
     }
 }
