@@ -63,7 +63,14 @@ export const exportAllFormat = async (req: Request, res: Response) => {
 
             }
             if (format == 'COCO') {
-                
+                const zipFilePath = await exportTool.segmentation_COCO(idproject) as string
+                const letter = zipFilePath.split('\\')
+                const fileName = letter[letter.length-1] as string
+                return res.status(200).json({
+                    type: 'success',
+                    message: 'upload image success',
+                    fileName
+                })
             }
         }
 

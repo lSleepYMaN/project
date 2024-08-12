@@ -5,6 +5,7 @@ import path from "path";
 import sharp from 'sharp'
 import * as polygon_config from '../utils/polygon_config'
 import * as mapClassId from '../utils/mapClassId'
+import { poly } from "googleapis/build/src/apis/poly";
 const prisma = new PrismaClient()
 
 export const createClass = async (label_name: string, idproject: any) => {
@@ -420,6 +421,50 @@ export const export_polygon_YOLO = async (idsegmentation: any, allClass: any) =>
         })));
 
         return modifiedBoundingBoxes;
+
+        
+    } catch (error) {
+        console.log("export YOLO bounding_box ERROR!!")
+        throw error
+    }
+}
+
+export const export_polygon_COCO = async (idsegmentation: any, allClass: any) => {
+    try {
+        const whIMG = await prisma.segmentation.findUnique({
+            where: {
+                idsegmentation
+            }
+        })
+
+        const boundingBoxes = await prisma.polygon.findMany({
+            where: {
+                idsegmentation
+            },
+            select: {
+                idpolygon: true,
+                xy_polygon: true,
+                segmentation_class_id: true,
+                user_id: true,
+            }
+        });
+
+        const modifiedPolygon = await Promise.all(boundingBoxes.map(async polygon => ({
+            idbounding_box: polygon.idpolygon,
+            xy_polygon: await polygon_config.convert_to_normal_number(polygon.xy_polygon!, whIMG?.width_image, whIMG?.height_image),
+            segmentation_class_id: await mapClassId.segmentation_map_class(allClass, await prisma.segmentation_class.findUnique({
+                                                                            where:{
+                                                                                class_id: polygon.segmentation_class_id
+                                                                            },
+                                                                            select: {
+                                                                                class_label: true
+                                                                            }
+                                                                            })),
+            bbox_data: await polygon_config.convert_to_bbox(await polygon_config.convert_to_normal_number(polygon.xy_polygon!, whIMG?.width_image, whIMG?.height_image)),          
+            user_id: polygon.user_id,
+        })));
+
+        return modifiedPolygon;
 
         
     } catch (error) {

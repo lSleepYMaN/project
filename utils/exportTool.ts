@@ -313,13 +313,13 @@ export const detection_COCO = async (idproject: any) => {
             images: [] as any[],
             annotations: [] as any[],
             categories: allClass.map((name, index) => ({
-                id: index + 1, name, supercategory: 'none'
+                id: index, name, supercategory: 'none'
             }))
         };
 
-        let annotationId = 1;
+        let annotationId = 0;
         for (let i = 0; i < detection.length; i++) {
-            const imgId = i + 1;
+            const imgId = i;
             const imgName = detection[i].image_path!;
             const imagePath = path.join(__dirname, '..', 'project_path', `${idproject}`, 'images', imgName);
             const destPath = path.join(imagesDir, imgName);
@@ -335,13 +335,18 @@ export const detection_COCO = async (idproject: any) => {
             const bboxes = await detectionModel.export_bbox_COCO(detection[i].iddetection, allClass);
             for (const bbox of bboxes) {
                 cocoAnnotations.annotations.push({
-                    id: annotationId, image_id: imgId, category_id: bbox.detection_class_id + 1, bbox: [bbox.x, bbox.y, bbox.width, bbox.height], area: bbox.width * bbox.height, iscrowd: 0
+                    id: annotationId, 
+                    image_id: imgId, 
+                    category_id: 
+                    bbox.detection_class_id, 
+                    bbox: [bbox.x, bbox.y, bbox.width, bbox.height], 
+                    area: bbox.width * bbox.height, iscrowd: 0
                 });
                 annotationId++;
             }
         }
 
-        fs.writeFileSync(annotationsFile, JSON.stringify(cocoAnnotations, null, 2));
+        fs.writeFileSync(annotationsFile, JSON.stringify(cocoAnnotations));
 
         const zipFilePath = path.join(__dirname, '..', 'project_path', `${idproject}`, `${project?.project_name}.zip`);
         const zipFile = fs.createWriteStream(zipFilePath);
@@ -373,3 +378,98 @@ export const detection_COCO = async (idproject: any) => {
     }
 }
 
+export const segmentation_COCO = async (idproject: any) => {
+    try {
+        const label = await segmentationModel.getAllLabel(idproject);
+        const segmentation = await segmentationModel.getAllSegmentation(idproject);
+        const project = await projectModel.getprojectById(idproject);
+
+        const allClass: string[] = [];
+        const COCOdir = project?.project_name;
+        const imagesDir = path.join(COCOdir!, 'train');
+        const annotationsFile = path.join(imagesDir, 'annotations.json');
+
+        if (!fs.existsSync(COCOdir!)) {
+            fs.mkdirSync(COCOdir!);
+        }
+        if (!fs.existsSync(imagesDir)) {
+            fs.mkdirSync(imagesDir);
+        }
+
+        for (let i = 0; i < label.length; i++) {
+            allClass.push(label[i].class_label);
+        }
+
+        const cocoAnnotations = {
+            images: [] as any[],
+            annotations: [] as any[],
+            categories: allClass.map((name, index) => ({
+                id: index,
+                name,
+                supercategory: 'none'
+            }))
+        };
+
+        let annotationId = 0;
+        for (let i = 0; i < segmentation.length; i++) {
+            const imgId = i;
+            const imgName = segmentation[i].image_path!;
+            const imagePath = path.join(__dirname, '..', 'project_path', `${idproject}`, 'images', imgName);
+            const destPath = path.join(imagesDir, imgName);
+
+            fs.copyFileSync(imagePath, destPath);
+
+            const imgMetadata = await sharp(destPath).metadata();
+            cocoAnnotations.images.push({
+                id: imgId,
+                file_name: imgName,
+                height: imgMetadata.height,
+                width: imgMetadata.width,
+            });
+
+            const polygons = await segmentationModel.export_polygon_COCO(segmentation[i].idsegmentation, allClass);
+            for (const polygon of polygons) {
+                cocoAnnotations.annotations.push({
+                    id: annotationId,
+                    image_id: imgId,
+                    category_id: polygon.segmentation_class_id,
+                    segmentation: [ polygon.xy_polygon ],
+                    area: polygon.bbox_data.width * polygon.bbox_data.height,
+                    bbox: [polygon.bbox_data.xMin, polygon.bbox_data.yMin, polygon.bbox_data.width, polygon.bbox_data.height],
+                    iscrowd: 0
+                });
+                annotationId++;
+            }
+        }
+
+        fs.writeFileSync(annotationsFile, JSON.stringify(cocoAnnotations));
+
+        const zipFilePath = path.join(__dirname, '..', 'project_path', `${idproject}`, `${project?.project_name}.zip`);
+        const zipFile = fs.createWriteStream(zipFilePath);
+        const archive = archiver('zip', {
+            zlib: { level: 9 }
+        });
+
+        return new Promise<string>((resolve, reject) => {
+            zipFile.on('close', () => {
+                console.log(`Created zip file with ${archive.pointer()} total bytes`);
+                rimraf.sync(COCOdir!);
+                console.log('Directory removed successfully');
+                resolve(zipFilePath);
+            });
+
+            zipFile.on('error', (err) => {
+                console.error('Error creating zip file:', err);
+                reject(err);
+            });
+
+            archive.pipe(zipFile);
+            archive.directory(COCOdir, false);
+            archive.finalize();
+        });
+
+    } catch (error) {
+        console.error('Error:', error);
+        throw new Error('Failed to export COCO data');
+    }
+}
