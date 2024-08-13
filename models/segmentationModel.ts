@@ -5,7 +5,7 @@ import path from "path";
 import sharp from 'sharp'
 import * as polygon_config from '../utils/polygon_config'
 import * as mapClassId from '../utils/mapClassId'
-import { poly } from "googleapis/build/src/apis/poly";
+import * as detectionModel from '../models/detectionModel'
 const prisma = new PrismaClient()
 
 export const createClass = async (label_name: string, idproject: any) => {
@@ -288,6 +288,14 @@ export const createPolygon = async (polygon: string, idsegmentation: any, segmen
                 idproject: idproject,
             }
         })
+        const create_label2 =  await prisma.detection_class.create({
+            data: {
+                class_label: segmentation_class_label,
+                created_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                idproject: idproject,
+            }
+        })
         return await prisma.polygon.create({
             data: {
                 xy_polygon: point, 
@@ -335,6 +343,14 @@ export const updatePolygon = async (idpolygon: any, xy_polygon: string, segmenta
             })
         }
         const create_label =  await prisma.segmentation_class.create({
+            data: {
+                class_label: segmentation_class_label,
+                created_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                idproject: idproject,
+            }
+        })
+        const create_label2 =  await prisma.detection_class.create({
             data: {
                 class_label: segmentation_class_label,
                 created_at: new Date(new Date().getTime()+(7*60*60*1000)),
@@ -501,4 +517,60 @@ export const create_import_Polygon = async (segmentation: any, user_id: any, idp
         return 0
     }
 
+}
+
+export const segmentation_to_detection = async (idproject: any, user_id: any) => {
+    try {
+        const allClassSeg = await getAllLabel(idproject)
+        let bbox_num = 0
+        for(let i = 0; i < allClassSeg.length; i++) {
+            const detectionClass = await detectionModel.getlabelName(idproject, allClassSeg[i].class_label)
+            const polygons = await prisma.polygon.findMany({
+                where: {
+                    segmentation_class_id: allClassSeg[i].class_id
+                }
+            })
+            await prisma.bounding_box.deleteMany({
+                where: {
+                    detection_class_id: detectionClass[0].class_id
+                }
+            })
+            for(let j = 0; j < polygons.length; j++) {
+                const getImg_path = await prisma.segmentation.findUnique({
+                    where: {
+                        idsegmentation: polygons[j].idsegmentation
+                    }
+                })
+                const detection = await prisma.detection.findMany({
+                    where: {
+                      idproject,
+                      image_path: getImg_path?.image_path
+                    }
+                });
+                const bbox = await polygon_config.convert_to_bbox(await polygon_config.convert_to_normal_number(polygons[j].xy_polygon!, getImg_path?.width_image, getImg_path?.height_image))
+                const create_bbox = await prisma.bounding_box.create({
+                    data: {
+                    x1: bbox.xMin/detection[0].width_image!,
+                    x2: (bbox.xMin + bbox.width)/detection[0].width_image!,
+                    y1: bbox.yMin/detection[0].height_image!,
+                    y2: (bbox.yMin + bbox.height)/detection[0].height_image!,
+                    created_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                    updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                    iddetection: detection[0].iddetection,
+                    detection_class_id: detectionClass[0].class_id,
+                    user_id: user_id
+                    }
+                })
+
+                bbox_num ++
+            }
+            
+        }
+
+        return bbox_num
+        
+    } catch (error) {
+        console.log("Convert segmentation to detection ERROR!!")
+        throw error
+    }
 }

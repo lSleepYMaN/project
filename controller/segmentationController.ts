@@ -251,29 +251,6 @@ export const getPolygon = async (req: Request, res: Response) => {
     }
 }
 
-// export const updatePolygon = async (req: Request, res: Response) => {
-//     try {
-//         const token = req.cookies.token
-//         const user = jwt.verify(token, process.env.SECRET as string)
-//         const polygon = req.body.polygon
-//         let length = polygon.length
-
-//         for(let i = 0; i < length; i++) {
-//             const update = segmentationModel.updatePolygon(polygon[i].idpolygon, polygon[i].xy_polygon
-//                                                             ,polygon[i].class_id, user.id)
-//         }
-//         return res.status(200).json({
-//             type: 'success',
-//             message: 'update polygon สำเร็จ',
-
-//         })
-        
-//     } catch (error) {
-//         console.error('error:', error);
-//         return res.status(500).json({ error: 'update polygon ERROR!!' })
-//     }
-// }
-
 export const delpolygon = async (req: Request, res: Response) => {
     try {
         const idpolygon = req.body.idpolygon
@@ -309,5 +286,25 @@ export const delpolygon = async (req: Request, res: Response) => {
     } catch (error) {
         console.error('error:', error);
         return res.status(500).json({ error: 'delete polygon ERROR!!' })
+    }
+}
+
+export const segmentation_to_detection = async (req: Request, res: Response) => {
+    try {
+        const token = req.cookies.token
+        const user = jwt.verify(token, process.env.SECRET as string)
+        const idproject = parseInt(req.body.idproject)
+        const create = await segmentationModel.segmentation_to_detection(idproject, user.id)
+        console.log(`Create ${create} bounding box`)
+
+        return res.status(200).json({
+            type: 'success',
+            message: 'Convert segmentation to detection success',
+
+        })
+        
+    } catch (error) {
+        console.error('error:', error);
+        return res.status(500).json({ error: 'Convert segmentation to detection ERROR!!' })
     }
 }

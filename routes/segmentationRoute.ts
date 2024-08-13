@@ -5,6 +5,7 @@ const router = express.Router()
 
 router.post('/create/segmentation/label', check.checkAuth, segmentationController.createSegmentationClass)
 router.post('/create/segmentation/polygon', check.checkAuth, segmentationController.CRUDPolygon)
+router.post('/convert/segmentation', check.checkAuth, segmentationController.segmentation_to_detection)
 
 router.get('/segmentation/class/:idproject', check.checkAuth, segmentationController.getAllClass)
 router.get('/segmentation/polygon/:idsegmentation', check.checkAuth, segmentationController.getPolygon)

@@ -415,6 +415,14 @@ export const createBounding_box = async (x1: any, x2: any, y1: any, y2: any, idd
                 idproject: idproject,
             }
         })
+        const create_label2 =  await prisma.segmentation_class.create({
+            data: {
+                class_label: detection_class_label,
+                created_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                idproject: idproject,
+            }
+        })
         return await prisma.bounding_box.create({
             data: {
                 x1: (x1/whIMG?.width_image!),
@@ -497,6 +505,14 @@ export const updateBounding_box = async (idbounding_box: any, x1: any, x2: any, 
             })
         }
         const create_label =  await prisma.detection_class.create({
+            data: {
+                class_label: detection_class_label,
+                created_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
+                idproject: idproject,
+            }
+        })
+        const create_label2 =  await prisma.segmentation_class.create({
             data: {
                 class_label: detection_class_label,
                 created_at: new Date(new Date().getTime()+(7*60*60*1000)),
