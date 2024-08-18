@@ -18,6 +18,16 @@ export const YOLO_detection = async (req: Request, res: Response) => {
         const user = jwt.verify(token, process.env.SECRET as string)
         const file = req.file
         const idproject = parseInt(req.body.idproject)
+
+        const checkData = await detectionModel.getAllDetection(idproject)
+
+        if (checkData.length != 0) {
+            return res.status(200).json({
+                type: 'failed',
+                message: 'Not allowed to import',
+            })
+        }
+
         const projectPath = path.join(process.cwd(), 'uploads', idproject.toString());
 
         if (!fs.existsSync(projectPath)) {
@@ -156,6 +166,16 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
         const user = jwt.verify(token, process.env.SECRET as string)
         const file = req.file
         const idproject = parseInt(req.body.idproject)
+
+        const checkData = await segmentationModel.getAllSegmentation(idproject)
+
+        if (checkData.length != 0) {
+            return res.status(200).json({
+                type: 'failed',
+                message: 'Not allowed to import',
+            })
+        }
+
         const projectPath = path.join(process.cwd(), 'uploads', idproject.toString());
 
         if (!fs.existsSync(projectPath)) {
