@@ -138,21 +138,11 @@ export const YOLO_detection = async (req: Request, res: Response) => {
         }
 
         const save_bbox = await detectionModel.create_import_Bounding_box(detections, user.id, idproject)
-        
-        if (save_bbox == 0) {
-            return res.status(200).json({
-                type: 'failed',
-                message: 'import bbox failed',
 
-            })
-        }
-
-        if (save_bbox == 1) {
-            return res.status(200).json({
-                type: 'success',
-                message: 'import bbox success',
-            })
-        }
+        return res.status(200).json({
+            type: 'success',
+            message: 'import bbox success',
+        })
         
     } catch (error) {
         console.error('error:', error);
@@ -315,20 +305,11 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
         const save_polygon = await segmentationModel.create_import_Polygon(segmentations, user.id, idproject)
         const save_bbox = await detectionModel.create_import_Bounding_box(detections, user.id, idproject)
         
-        if (save_polygon == 0) {
-            return res.status(200).json({
-                type: 'failed',
-                message: 'import polygon failed',
+        return res.status(200).json({
+            type: 'success',
+            message: 'import polygon success',
+        })
 
-            })
-        }
-
-        if (save_polygon == 1) {
-            return res.status(200).json({
-                type: 'success',
-                message: 'import polygon success',
-            })
-        }
         
     } catch (error) {
         console.error('error:', error);
