@@ -78,15 +78,23 @@ export const user_in_charge = async (userId: any, projectId: any, status: any) =
 
 export const getAllproject = async (id: any, status: any) => {
     try {
-        return await prisma.project.findMany({
+        const projects = await prisma.project.findMany({
             where:{ user_in_charge: {some: {user_id : id, has_allow: status}}},
             select: {
                 idproject: true,
                 project_name: true,
                 description: true,
-                root_path: true,
             }
         })
+
+        return await Promise.all(projects.map(async project => ({
+            idproject: project.idproject,
+            project_name: project.project_name,
+            description: project.description,
+            owner: await getOwner(project.idproject)
+
+        })));
+
     } catch (error) {
         console.log("get project is ERROR!!")
         throw error
@@ -118,11 +126,35 @@ export const getAllprojectByname = async (id: any, name: string, status: any) =>
                 idproject: true,
                 project_name: true,
                 description: true,
-                root_path: true,
             }
         })
     } catch (error) {
         console.log("get project is ERROR!!")
+        throw error
+    }
+}
+
+export const getOwner = async (idproject: any) => {
+    try {
+        const user = await prisma.user_in_charge.findFirst({
+            where:{
+                idproject, has_allow: 1
+            }
+        })
+
+        const getUsername = await prisma.user.findUnique({
+            where: {
+                id: user?.user_id
+            },
+            select:{
+                username: true
+            }
+        })
+
+        return getUsername?.username
+
+    } catch (error) {
+        console.log("get owner is ERROR!!")
         throw error
     }
 }
