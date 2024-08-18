@@ -352,3 +352,21 @@ export const detection_to_classification = async (req: Request, res:Response) =>
         return res.status(500).json({ error: 'Convert detection to classification ERROR!!' })
     }
 }
+
+export const get_process = async (req: Request, res: Response) => {
+    try {
+        const idproject = parseInt(req.params.idproject)
+        const result = await detectionModel.get_process(idproject)
+
+        return res.status(200).json({
+            type: 'success',
+            message: 'get process in detection success',
+            total: result.total,
+            process: result.inProcess
+        })
+        
+    } catch (error) {
+        console.error('error:', error);
+        return res.status(500).json({ error: 'get process in detection ERROR!!' })
+    }
+}

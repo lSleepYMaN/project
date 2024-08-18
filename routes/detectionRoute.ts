@@ -10,9 +10,8 @@ router.post('/convert/detection', check.checkAuth, detectionController.detection
 router.get('/detection/class/:idproject', check.checkAuth, detectionController.getAllClass)
 router.get('/detection/bounding_box/:iddetection', check.checkAuth, detectionController.getBounding_box)
 router.get('/detection/allDetection/:idproject', check.checkAuth, detectionController.getAllDetection)
-//router.get('/detection/class/:class_id', check.checkAuth, detectionController.getClass)
+router.get('/detection/getProcess/:idproject', check.checkAuth, detectionController.get_process)
 
-//router.put('/update/detection/bounding_box', check.checkAuth, detectionController.updateBounding_box)
 router.put('/update/detection/class', check.checkAuth, detectionController.updateClass)
 
 router.delete('/delete/detection/bounding_box', check.checkAuth, detectionController.delBounding_box)

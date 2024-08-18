@@ -10,8 +10,8 @@ router.post('/convert/segmentation', check.checkAuth, segmentationController.seg
 router.get('/segmentation/class/:idproject', check.checkAuth, segmentationController.getAllClass)
 router.get('/segmentation/polygon/:idsegmentation', check.checkAuth, segmentationController.getPolygon)
 router.get('/segmentation/allSegmentation/:idproject', check.checkAuth, segmentationController.getAllSegmentation)
+router.get('/segmentation/getProcess/:idproject', check.checkAuth, segmentationController.get_process)
 
-// router.put('/update/segmentation/polygon', check.checkAuth, segmentationController.updatePolygon)
 router.put('/update/segmentation/class', check.checkAuth, segmentationController.updateClass)
 
 router.delete('/delete/segmentation/polygon', check.checkAuth, segmentationController.delpolygon)

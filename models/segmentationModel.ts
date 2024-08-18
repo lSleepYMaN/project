@@ -574,3 +574,33 @@ export const segmentation_to_detection = async (idproject: any, user_id: any) =>
         throw error
     }
 }
+
+export const get_process = async (idproject: any) => {
+    try {
+        const segmentation = await prisma.segmentation.findMany({
+            where: {
+                idproject
+            }
+        })
+
+        const process = await prisma.segmentation.groupBy({
+            by: ['idsegmentation'],
+            where: {
+                idproject,
+                polygon: {
+                    some: {}
+                }
+            },
+            _count: true
+        })
+
+        const total = segmentation.length
+        const inProcess = process.length
+
+        return {total, inProcess}
+        
+    } catch (error) {
+        console.log("get process in segmentation ERROR!!")
+        throw error
+    }
+}

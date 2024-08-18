@@ -604,3 +604,33 @@ export const detection_to_classification = async (idproject: any, detection_clas
         throw error
     }
 }
+
+export const get_process = async (idproject: any) => {
+    try {
+        const detection = await prisma.detection.findMany({
+            where: {
+                idproject
+            }
+        })
+
+        const process = await prisma.detection.groupBy({
+            by: ['iddetection'],
+            where: {
+                idproject,
+                bounding_box: {
+                    some: {}
+                }
+            },
+            _count: true
+        })
+
+        const total = detection.length
+        const inProcess = process.length
+
+        return {total, inProcess}
+        
+    } catch (error) {
+        console.log("get process in detection ERROR!!")
+        throw error
+    }
+}

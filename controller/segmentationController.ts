@@ -308,3 +308,21 @@ export const segmentation_to_detection = async (req: Request, res: Response) => 
         return res.status(500).json({ error: 'Convert segmentation to detection ERROR!!' })
     }
 }
+
+export const get_process = async (req: Request, res: Response) => {
+    try {
+        const idproject = parseInt(req.params.idproject)
+        const result = await segmentationModel.get_process(idproject)
+
+        return res.status(200).json({
+            type: 'success',
+            message: 'get process in segmentation success',
+            total: result.total,
+            process: result.inProcess
+        })
+        
+    } catch (error) {
+        console.error('error:', error);
+        return res.status(500).json({ error: 'get process in segmentation ERROR!!' })
+    }
+}
