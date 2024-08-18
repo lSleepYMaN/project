@@ -7,6 +7,7 @@ const storage = multer.memoryStorage()
 const upload = multer({ storage: storage })
 
 router.get('/classification/class/:idproject', check.checkAuth, classificationController.getAllClass)
+router.get('/classification/getProcess/:idproject', check.checkAuth, classificationController.get_process)
 
 router.post('/create/classification/label', check.checkAuth, classificationController.createClassificationClass)
 router.post('/classification/uploadImage', check.checkAuth, upload.array('image'), classificationController.uploadImage)

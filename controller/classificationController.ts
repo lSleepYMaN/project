@@ -161,3 +161,40 @@ export const delClass = async (req: Request, res: Response) => {
         return res.status(500).json({ error: 'update class ERROR!!' })
     }
 }
+
+export const get_process = async (req: Request, res: Response) => {
+    try {
+        const idproject = parseInt(req.params.idproject)
+        const getAllClass = await classificationModel.getAllClass(idproject)
+
+        if (!getAllClass) {
+            return res.status(500).json({ 
+                type: 'failed',
+                message: 'This project no classification',
+            })
+        }
+
+        let process = 0
+        
+        for(let i = 0; i < getAllClass.length; i++){
+            const dir = path.join(__dirname, '../project_path' , `${idproject}`, 'classification', `${getAllClass[i].class_index}`)
+            let fileCount = fs.readdirSync(dir).length
+            if (fileCount > 0) {
+                process ++
+            } else {
+                console.log('This class has no image.')
+            }
+        }
+
+        return res.status(200).json({
+            type: 'success',
+            message: 'get process in classification success',
+            total: getAllClass.length,
+            process
+        })
+        
+    } catch (error) {
+        console.error('error:', error);
+        return res.status(500).json({ error: 'get process in classification ERROR!!' })
+    }
+}

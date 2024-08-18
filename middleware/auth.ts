@@ -3,7 +3,6 @@ const jwt = require('jsonwebtoken')
 
 export const checkAuth = (req: Request, res: Response, next: Function) => {
     try {
-       // const authHeader = req.headers['authorization']
         const token = req.cookies.token
         const user = jwt.verify(token, process.env.SECRET as string)
 
@@ -15,7 +14,7 @@ export const checkAuth = (req: Request, res: Response, next: Function) => {
             console.log('no id')
             return res.status(200).json({
                 type: 'error',
-                message: 'กรุณา login',
+                message: 'Please login',
             })
         }
 
@@ -24,23 +23,23 @@ export const checkAuth = (req: Request, res: Response, next: Function) => {
         return res.status(500).json({ 
             error: 'failed',
             type: 'error',
-            message: 'กรุณา login', 
+            message: 'Please login', 
         })
     }
 }
 
-export const checkAuth2 = (req: Request, res: Response, next: Function) => {
-    try {
+// export const checkAuth2 = (req: Request, res: Response, next: Function) => {
+//     try {
 
-        if(req.session.userid){
-            return next()
-        }
-        else{
-            return res.redirect('/....')
-        }
+//         if(req.session.userid){
+//             return next()
+//         }
+//         else{
+//             return res.redirect('/....')
+//         }
 
-    } catch (error) {
-        console.error('error:', error);
-        return res.status(500).json({ error: 'failed' })
-    }
-}
+//     } catch (error) {
+//         console.error('error:', error);
+//         return res.status(500).json({ error: 'failed' })
+//     }
+// }
