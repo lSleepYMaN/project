@@ -17,8 +17,8 @@ export const exportAllFormat = async (req: Request, res: Response) => {
 
         if (type == 'classification') {
             const zipFilePath = await exportTool.classification_export(idproject) as string
-            const letter = zipFilePath.split('\\')
-                const fileName = letter[letter.length-1] as string
+            const fileName = path.basename(zipFilePath)
+
             return res.status(200).json({
                 type: 'success',
                 message: 'upload image success',
@@ -29,8 +29,8 @@ export const exportAllFormat = async (req: Request, res: Response) => {
         if (type == 'detection') {
             if (format == 'YOLO') {
                 const zipFilePath = await exportTool.detection_YOLO(idproject) as string
-                const letter = zipFilePath.split('\\')
-                const fileName = letter[letter.length-1] as string
+                const fileName = path.basename(zipFilePath)
+
                 return res.status(200).json({
                     type: 'success',
                     message: 'upload image success',
@@ -40,8 +40,8 @@ export const exportAllFormat = async (req: Request, res: Response) => {
             }
             if (format == 'COCO') {
                 const zipFilePath = await exportTool.detection_COCO(idproject) as string
-                const letter = zipFilePath.split('\\')
-                const fileName = letter[letter.length-1] as string
+                const fileName = path.basename(zipFilePath)
+
                 return res.status(200).json({
                     type: 'success',
                     message: 'upload image success',
@@ -53,8 +53,8 @@ export const exportAllFormat = async (req: Request, res: Response) => {
         if (type == 'segmentation') {
             if (format == 'YOLO') {
                 const zipFilePath = await exportTool.segmentation_YOLO(idproject) as string
-                const letter = zipFilePath.split('\\')
-                const fileName = letter[letter.length-1] as string
+                const fileName = path.basename(zipFilePath)
+
                 return res.status(200).json({
                     type: 'success',
                     message: 'upload image success',
@@ -64,8 +64,8 @@ export const exportAllFormat = async (req: Request, res: Response) => {
             }
             if (format == 'COCO') {
                 const zipFilePath = await exportTool.segmentation_COCO(idproject) as string
-                const letter = zipFilePath.split('\\')
-                const fileName = letter[letter.length-1] as string
+                const fileName = path.basename(zipFilePath)
+                
                 return res.status(200).json({
                     type: 'success',
                     message: 'upload image success',
