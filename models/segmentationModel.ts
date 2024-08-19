@@ -120,7 +120,7 @@ export const delLabel = async (class_id: any) => {
 
 export const getAllSegmentation = async (idproject: any) => {
     try {
-        return await prisma.segmentation.findMany({
+        const segmentations = await prisma.segmentation.findMany({
             where: {idproject: idproject},
             select: {
                 idsegmentation: true,
@@ -129,6 +129,15 @@ export const getAllSegmentation = async (idproject: any) => {
                 width_image: true,
             }
         })
+
+        return await Promise.all(segmentations.map(async segmentation => ({
+            idsegmentation: segmentation.idsegmentation,
+            image_path: segmentation.image_path,
+            height_image: segmentation.height_image,
+            width_image: segmentation.width_image,
+            polygon: await checkHavepolygon(segmentation.idsegmentation)
+
+        })));
         
     } catch (error) {
         console.log("get segmentayion ERROR!!")
@@ -601,6 +610,26 @@ export const get_process = async (idproject: any) => {
         
     } catch (error) {
         console.log("get process in segmentation ERROR!!")
+        throw error
+    }
+}
+
+export const checkHavepolygon = async (idsegmentation: any) => {
+    try {
+        const check = await prisma.polygon.findMany({
+            where: {
+                idsegmentation
+            }
+        })
+
+        if (check.length > 0) {
+            return 1
+        } else {
+            return 0
+        }
+        
+    } catch (error) {
+        console.log("check have polygon ERROR!!")
         throw error
     }
 }

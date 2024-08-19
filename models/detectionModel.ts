@@ -140,7 +140,7 @@ export const getDetection = async (iddetection: any) => {
 
 export const getAllDetection = async (idproject: any) => {
     try {
-        return await prisma.detection.findMany({
+        const detections = await prisma.detection.findMany({
             where: {idproject: idproject},
             select: {
                 iddetection: true,
@@ -149,6 +149,16 @@ export const getAllDetection = async (idproject: any) => {
                 width_image: true,
             }
         })
+
+        return await Promise.all(detections.map(async detection => ({
+            iddetection: detection.iddetection,
+            image_path: detection.image_path,
+            height_image: detection.height_image,
+            width_image: detection.width_image,
+            bbox: await checkHavebbox(detection.iddetection)
+
+        })));
+
         
     } catch (error) {
         console.log("get detection ERROR!!")
@@ -631,6 +641,26 @@ export const get_process = async (idproject: any) => {
         
     } catch (error) {
         console.log("get process in detection ERROR!!")
+        throw error
+    }
+}
+
+export const checkHavebbox = async (iddetection: any) => {
+    try {
+        const check = await prisma.bounding_box.findMany({
+            where: {
+                iddetection
+            }
+        })
+
+        if (check.length > 0) {
+            return 1
+        } else {
+            return 0
+        }
+        
+    } catch (error) {
+        console.log("check have bbox ERROR!!")
         throw error
     }
 }
