@@ -5,6 +5,7 @@ import * as classificationModel from '../models/classificationModel'
 import fs from 'fs'
 import path from "path";
 import Jimp from 'jimp';
+import sharp from 'sharp';
 const archiver = require('archiver');
 import { rimraf } from "rimraf";
 
@@ -326,16 +327,10 @@ export const detection_COCO = async (idproject: any) => {
 
             fs.copyFileSync(imagePath, destPath);
 
-
-            const image = await Jimp.read(destPath);
-            const imageWidth = image.bitmap.width;
-            const imageHeight = image.bitmap.height;
+            const imgMetadata = await sharp(destPath).metadata();
 
             cocoAnnotations.images.push({
-                id: imgId,
-                file_name: imgName,
-                width: imageWidth,
-                height: imageHeight
+                id: imgId, file_name: imgName, width: detection[i].width_image, height: detection[i].height_image
             });
 
             const bboxes = await detectionModel.export_bbox_COCO(detection[i].iddetection, allClass);
@@ -425,15 +420,13 @@ export const segmentation_COCO = async (idproject: any) => {
 
             fs.copyFileSync(imagePath, destPath);
 
-            const image = await Jimp.read(destPath);
-            const imageWidth = image.bitmap.width;
-            const imageHeight = image.bitmap.height;
+            const imgMetadata = await sharp(destPath).metadata();
 
             cocoAnnotations.images.push({
                 id: imgId,
                 file_name: imgName,
-                width: imageWidth,
-                height: imageHeight
+                height: imgMetadata.height,
+                width: imgMetadata.width,
             });
 
             const polygons = await segmentationModel.export_polygon_COCO(segmentation[i].idsegmentation, allClass);

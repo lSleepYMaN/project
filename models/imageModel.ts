@@ -1,9 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 import fs from 'fs'
 import path from "path";
-import Jimp from 'jimp';
+import sharpBmp from 'sharp-bmp'
 import fileType from 'file-type';
-
+import sharp from 'sharp'
 const prisma = new PrismaClient()
 
 export const saveImage = async (idproject: any, images: Express.Multer.File[]) => {
@@ -16,6 +16,7 @@ export const saveImage = async (idproject: any, images: Express.Multer.File[]) =
             const image = images[i];
 
             let isImage = false;
+            let imageBuffer: Buffer;
 
             try {
                 const type = await fileType.fromBuffer(image.buffer);
@@ -29,19 +30,52 @@ export const saveImage = async (idproject: any, images: Express.Multer.File[]) =
             
             if (isImage) {
                 const originalName = path.basename(image.originalname, path.extname(image.originalname));
-                const fileName = `${fileCount.toString().padStart(8, '0')}_${originalName}${path.extname(image.originalname)}`;
+                const fileName = `${fileCount.toString().padStart(8, '0')}_${originalName}.jpg`
                 fileCount += 1;
                 let filePath = path.join(__dirname, '../project_path', idproject.toString(), 'images', fileName);
                 let thumbsPath = path.join(__dirname, '../project_path', idproject.toString(), 'thumbs', fileName);
+                
+                if (image.mimetype === 'image/bmp') {
+                    const bitmap = sharpBmp.decode(image.buffer);
+                    await sharp(bitmap.data, {
+                        raw: {
+                            width: bitmap.width,
+                            height: bitmap.height,
+                            channels: 4,
+                        },
+                    })
+                    .toFormat('jpeg')
+                    .toFile(filePath);
 
-                const img = await Jimp.read(image.buffer);
-                await img.writeAsync(filePath);
+                    await sharp(bitmap.data, {
+                        raw: {
+                            width: bitmap.width,
+                            height: bitmap.height,
+                            channels: 4,
+                        },
+                    })
+                    .resize(200, 200)
+                    .toFormat('jpeg')
+                    .toFile(thumbsPath);
 
-                const thumb = img.clone().resize(200, 200);
-                await thumb.writeAsync(thumbsPath);
+                } else if (image.mimetype === 'image/png') {
+                    imageBuffer = await sharp(image.buffer)
+                        .toFormat('jpeg')
+                        .toBuffer();
+                    await sharp(imageBuffer).toFile(filePath);
+                } else {
+                    imageBuffer = image.buffer;
+                    await sharp(imageBuffer).toFile(filePath);
 
-                const width = img.bitmap.width;
-                const height = img.bitmap.height;
+                    const thumbBuffer = await sharp(imageBuffer)
+                        .resize(200, 200)
+                        .toBuffer();
+                    await sharp(thumbBuffer).toFile(thumbsPath);
+                }
+
+                const metadata = await sharp(filePath).metadata();
+                const width = metadata.width
+                const height = metadata.height
 
                 await prisma.detection.create({
                     data: {
