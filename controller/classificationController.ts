@@ -1,6 +1,7 @@
 import { Request, Response } from "express"
 import fs from 'fs'
 import path from "path";
+import fileType from 'file-type';
 import * as classificationModel from '../models/classificationModel'
 
 export const createClassificationClass = async (req: Request, res: Response) => {
@@ -38,13 +39,42 @@ export const uploadImage = async (req: Request, res: Response) => {
 
         let fileCount = fs.readdirSync(dirUpload).length + 1
         let fileNames: string[] = []
+        let imgErr: string[] = [];
+        let isImage = false;
+
+
        for (let i = 0; i < files.length; i++){
             const image = files[i]
-            const originalName = path.basename(image.originalname, path.extname(image.originalname));
-            const fileName = `${fileCount.toString().padStart(8, '0')}_${originalName}${path.extname(image.originalname)}`;
-            fileCount += 1
-            let filePath = path.join(dirUpload,fileName)
-            fs.writeFileSync(filePath, image.buffer)
+
+            try {
+                const type = await fileType.fromBuffer(image.buffer);
+                if (type && ['image/jpeg', 'image/png', 'image/bmp'].includes(type.mime)) {
+                    isImage = true;
+                }
+            } catch (error) {
+                console.error(`Error processing image ${image.originalname}:`, error);
+                isImage = false;
+            }
+
+            if (isImage) {
+                const originalName = path.basename(image.originalname, path.extname(image.originalname));
+                const fileName = `${fileCount.toString().padStart(8, '0')}_${originalName}${path.extname(image.originalname)}`;
+                fileCount += 1
+                let filePath = path.join(dirUpload,fileName)
+                fs.writeFileSync(filePath, image.buffer)
+            } else {
+                const originalName = path.basename(image.originalname, path.extname(image.originalname));
+                imgErr.push(originalName);
+            }
+            
+        }
+
+        if (imgErr.length != 0) {
+            return res.status(200).json({
+                type: 'partial_success',
+                message: 'Some images were uploaded successfully, but some failed',
+                failed_files: imgErr
+            });
         }
 
         return res.status(200).json({
