@@ -1,61 +1,86 @@
 import { PrismaClient } from "@prisma/client";
 import fs from 'fs'
 import path from "path";
-import sharp from 'sharp'
-
+import Jimp from 'jimp';
+import fileType from 'file-type';
 
 const prisma = new PrismaClient()
 
 export const saveImage = async (idproject: any, images: Express.Multer.File[]) => {
     try {
-        let projectPath = path.join(__dirname, '../project_path', idproject.toString(), 'images')
-        let fileCount = fs.readdirSync(projectPath).length + 1
-        let fileNames: string[] = []
-       for (let i = 0; i < images.length; i++){
-            const image = images[i]
-            const originalName = path.basename(image.originalname, path.extname(image.originalname));
-            const fileName = `${fileCount.toString().padStart(8, '0')}_${originalName}${path.extname(image.originalname)}`;
-            fileCount += 1
-            let filePath = path.join(__dirname, '../project_path', idproject.toString(), 'images',fileName)
-            let thumbsPath = path.join(__dirname, '../project_path', idproject.toString(), 'thumbs',fileName)
-            fs.writeFileSync(filePath, image.buffer)
-            sharp(image.buffer).resize(200,200).toFile(thumbsPath)
+        let projectPath = path.join(__dirname, '../project_path', idproject.toString(), 'images');
+        let fileCount = fs.readdirSync(projectPath).length + 1;
+        let imgErr: string[] = [];
+        
+        for (let i = 0; i < images.length; i++) {
+            const image = images[i];
 
-            const metadata = await sharp(image.buffer).metadata()
-            const width = metadata.width
-            const height = metadata.height
+            let isImage = false;
 
-            await prisma.detection.create({
-                data: {
-                    image_path: fileName,
-                    height_image: height,
-                    width_image: width,
-                    created_at: new Date(new Date().getTime()+(7*60*60*1000)),
-                    updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
-                    idproject: idproject,
+            try {
+                const type = await fileType.fromBuffer(image.buffer);
+                if (type && ['image/jpeg', 'image/png', 'image/bmp'].includes(type.mime)) {
+                    isImage = true;
                 }
-            })
+            } catch (error) {
+                console.error(`Error processing image ${image.originalname}:`, error);
+                isImage = false;
+            }
             
-            await prisma.segmentation.create({
-                data: {
-                    image_path: fileName,
-                    height_image: height,
-                    width_image: width,
-                    created_at: new Date(new Date().getTime()+(7*60*60*1000)),
-                    updated_at: new Date(new Date().getTime()+(7*60*60*1000)),
-                    idproject: idproject,
-                }
-            })     
+            if (isImage) {
+                const originalName = path.basename(image.originalname, path.extname(image.originalname));
+                const fileName = `${fileCount.toString().padStart(8, '0')}_${originalName}${path.extname(image.originalname)}`;
+                fileCount += 1;
+                let filePath = path.join(__dirname, '../project_path', idproject.toString(), 'images', fileName);
+                let thumbsPath = path.join(__dirname, '../project_path', idproject.toString(), 'thumbs', fileName);
+
+                const img = await Jimp.read(image.buffer);
+                await img.writeAsync(filePath);
+
+                const thumb = img.clone().resize(200, 200);
+                await thumb.writeAsync(thumbsPath);
+
+                const width = img.bitmap.width;
+                const height = img.bitmap.height;
+
+                await prisma.detection.create({
+                    data: {
+                        image_path: fileName,
+                        height_image: height,
+                        width_image: width,
+                        created_at: new Date(new Date().getTime() + (7 * 60 * 60 * 1000)),
+                        updated_at: new Date(new Date().getTime() + (7 * 60 * 60 * 1000)),
+                        idproject: idproject,
+                    }
+                });
+                
+                await prisma.segmentation.create({
+                    data: {
+                        image_path: fileName,
+                        height_image: height,
+                        width_image: width,
+                        created_at: new Date(new Date().getTime() + (7 * 60 * 60 * 1000)),
+                        updated_at: new Date(new Date().getTime() + (7 * 60 * 60 * 1000)),
+                        idproject: idproject,
+                    }
+                });
+            } else {
+                const originalName = path.basename(image.originalname, path.extname(image.originalname));
+                imgErr.push(originalName);
+            }
         }
 
-        return true
+        return {
+            data: true,
+            imgErr
+        };
 
     } catch (error) {
         console.error('Error saving images:', error);
-        return false;
+        return 0;
     }
-    
-}
+};
+
 
 export const getImg = async (idproject: any) => {
     try {

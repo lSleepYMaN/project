@@ -254,18 +254,28 @@ export const uploadImage = async (req: Request, res: Response) => {
             })
         }
         
-        const ress = await imageModel.saveImage(idproject, files)
-        
-        if(!ress){
+        const result = await imageModel.saveImage(idproject, files)
+        console.log(result)
+        if (result !== 0) {
+            if (result.data && result.imgErr.length > 0) {
+                return res.status(200).json({
+                    type: 'partial_success',
+                    message: 'Some images were uploaded successfully, but some failed',
+                    failed_files: result.imgErr
+                });
+            }
+
+            return res.status(200).json({
+                type: 'success',
+                message: 'All images uploaded successfully'
+            });
+
+        } else {
             return res.status(400).json({
                 type: 'failed',
-                message: 'upload image fail'
-        })
+                message: 'upload image failed'
+            });
         }
-        return res.status(200).json({
-                type: 'success',
-                message: 'upload image success'
-        })
     } catch (error) {
         console.error('error:', error);
         return res.status(400).json({ error: 'upload image ERROR!!' })

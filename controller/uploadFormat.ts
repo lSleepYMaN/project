@@ -10,7 +10,7 @@ const jwt = require('jsonwebtoken')
 import { parse } from 'yaml';
 import path from 'path';
 import fs from 'fs';
-import sharp from 'sharp'
+import Jimp from 'jimp';
 
 export const YOLO_detection = async (req: Request, res: Response) => {
     try {
@@ -50,15 +50,13 @@ export const YOLO_detection = async (req: Request, res: Response) => {
         const imageFiles = fs.readdirSync(imagesDir);
         const storagePath = path.join(__dirname, '../project_path', idproject.toString(), 'images');
         let thumbsPath = path.join(__dirname, '../project_path', idproject.toString(), 'thumbs')
-        // if (!fs.existsSync(storagePath)) {
-        //     fs.mkdirSync(storagePath, { recursive: true });
-        // }
 
         for (const imageFile of imageFiles) {
             const newFilePath = path.join(storagePath, imageFile);
             let thumbsPath = path.join(__dirname, '../project_path', idproject.toString(), 'thumbs', imageFile)
             fs.copyFileSync(path.join(imagesDir, imageFile), newFilePath);
-            sharp(newFilePath).resize(200,200).toFile(thumbsPath)
+            const image = await Jimp.read(newFilePath);
+            image.resize(200, 200).write(thumbsPath);
 
             await detectionModel.createDetection(imageFile, idproject)
             await segmentationModel.createSegmentation(imageFile, idproject)
@@ -102,9 +100,10 @@ export const YOLO_detection = async (req: Request, res: Response) => {
                     imageFileName = `${baseName}.png`;
                 }
                 const imgPath = path.join(imagesDir, imageFileName)
-                const metadata = await sharp(imgPath).metadata();
-                const image_width = metadata.width;
-                const image_height = metadata.height;
+                const image = await Jimp.read(imgPath);
+                const image_width = image.bitmap.width;
+                const image_height = image.bitmap.height;
+                
                     detections.push({
                         classId: await mapClassId.map_detection_import(parseInt(classId),labels,idproject),
                         x1: ((parseFloat(x_center)*image_width!) - ((parseFloat(width)*image_width!)/2))/image_width!,
@@ -189,16 +188,15 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
         const imageFiles = fs.readdirSync(imagesDir);
         const storagePath = path.join(__dirname, '../project_path', idproject.toString(), 'images');
         let thumbsPath = path.join(__dirname, '../project_path', idproject.toString(), 'thumbs')
-        // if (!fs.existsSync(storagePath)) {
-        //     fs.mkdirSync(storagePath, { recursive: true });
-        // }
+    
 
         for (const imageFile of imageFiles) {
             const newFilePath = path.join(storagePath, imageFile);
             console.log("newFilePath : ", newFilePath)
             let thumbsPath = path.join(__dirname, '../project_path', idproject.toString(), 'thumbs', imageFile)
             fs.copyFileSync(path.join(imagesDir, imageFile), newFilePath);
-            sharp(newFilePath).resize(200,200).toFile(thumbsPath)
+            const image = await Jimp.read(newFilePath);
+            image.resize(200, 200).write(thumbsPath);
 
             await segmentationModel.createSegmentation(imageFile, idproject)
             await detectionModel.createDetection(imageFile, idproject)
@@ -260,7 +258,7 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
                     imageFileName = `${baseName}.png`;
                     }
                     const imgPath = path.join(imagesDir, imageFileName)
-                    const metadata = await sharp(imgPath).metadata();
+                    const image = await Jimp.read(imgPath);
                     console.log(labels)
                         segmentations.push({
                             classId: await mapClassId.map_segmentation_import(classId,labels,idproject),

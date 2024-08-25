@@ -1,10 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 import * as mapClassId from '../utils/mapClassId'
 import * as classificationModel from './classificationModel'
-import { dir } from "console";
 import fs from 'fs'
 import path from "path";
-import sharp from 'sharp'
+import Jimp from 'jimp';
 const prisma = new PrismaClient()
 
 export const createClass = async (label_name: string, idproject: any) => {
@@ -343,9 +342,10 @@ export const createDetection = async ( imageName: any, idproject: any) => {
     try {
         
         let imagePath = path.join(__dirname, '../project_path', idproject.toString(), 'images', imageName)
-        const metadata = await sharp(imagePath).metadata()
-        const width = metadata.width
-        const height = metadata.height
+        const img = await Jimp.read(imagePath);
+
+        const width = img.bitmap.width;
+        const height = img.bitmap.height;
 
         await prisma.detection.create({
             data: {
@@ -601,10 +601,13 @@ export const detection_to_classification = async (idproject: any, detection_clas
             let height = Math.round((bboxs[i].y2!*detection?.height_image!) - (bboxs[i].y1!*detection?.height_image!))
             let fileCount = fs.readdirSync(indexFolder).length + 1
             let fileName: string = `${fileCount.toString().padStart(8, '0')}.jpg`
-            await sharp(image_path)
-            .extract({ left: Math.round((bboxs[i].x1!*detection?.width_image!)), top: Math.round((bboxs[i].y1!*detection?.height_image!)), width: Math.round(width), height: Math.round(height) })
-            .toFile(path.join(indexFolder, fileName));
-            num_image ++
+            const image = await Jimp.read(image_path);
+            
+            image
+                .crop(Math.round((bboxs[i].x1! * detection?.width_image!)), Math.round((bboxs[i].y1! * detection?.height_image!)), width, height)
+                .write(path.join(indexFolder, fileName), () => {
+                    num_image++;
+            });
         }
 
         return num_image

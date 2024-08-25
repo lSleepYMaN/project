@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { dir } from "console";
 import fs from 'fs'
 import path from "path";
-import sharp from 'sharp'
+import Jimp from 'jimp';
 import * as polygon_config from '../utils/polygon_config'
 import * as mapClassId from '../utils/mapClassId'
 import * as detectionModel from '../models/detectionModel'
@@ -214,9 +214,10 @@ export const getPolygon_by_id = async (idpolygon: any) => {
 export const createSegmentation = async ( imageName: any, idproject: any) => {
     try {
             let imagePath = path.join(__dirname, '../project_path', idproject.toString(), 'images', imageName)
-            const metadata = await sharp(imagePath).metadata()
-            const width = metadata.width
-            const height = metadata.height
+            const img = await Jimp.read(imagePath);
+
+        const width = img.bitmap.width;
+        const height = img.bitmap.height;
 
             await prisma.segmentation.create({
                 data: {
