@@ -56,7 +56,7 @@ export const uploadImage = async (req: Request, res: Response) => {
                 isImage = false;
             }
 
-            if (isImage) {
+            if (isImage == true) {
                 const originalName = path.basename(image.originalname, path.extname(image.originalname));
                 const fileName = `${fileCount.toString().padStart(8, '0')}_${originalName}${path.extname(image.originalname)}`;
                 fileCount += 1
@@ -65,6 +65,7 @@ export const uploadImage = async (req: Request, res: Response) => {
             } else {
                 const originalName = path.basename(image.originalname, path.extname(image.originalname));
                 imgErr.push(originalName);
+                console.log(imgErr)
             }
             
         }
