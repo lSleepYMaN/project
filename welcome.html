@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to AnTCV</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 flex flex-col justify-center items-center">
+    <main class="text-center px-4 max-w-4xl w-full">
+        <div class="mb-8 fade-in" style="animation-delay: 0.1s;">
+            <img src="https://c.tenor.com/Q4tVC2cL_woAAAAd/noot-noot-apocalypse.gif" 
+                 alt="Noot Noot Apocalypse" 
+                 class="mx-auto w-full max-w-2xl h-auto rounded-lg shadow-xl">
+        </div>
+        <h1 class="text-4xl font-extrabold mb-6 text-blue-800 drop-shadow-sm fade-in" style="animation-delay: 0.3s;">
+            Welcome to AnTCV, but why are you here?
+        </h1>
+        <p class="text-lg mb-8 text-blue-700 fade-in" style="animation-delay: 0.5s;">
+            Go to <a href="https://antcv.dentxai.com" class="underline hover:text-blue-900 transition duration-300">https://antcv.dentxai.com</a> to create your dataset.
+        </p>
+        <a href="https://antcv.dentxai.com" class="inline-block bg-blue-600 text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-blue-700 transition duration-300 shadow-lg fade-in" style="animation-delay: 0.7s;">
+            Go to AnTCV
+        </a>
+    </main>
+    <footer class="fixed bottom-0 w-full py-4 text-center bg-white bg-opacity-90 shadow-md">
+        <p class="text-blue-600">© 2024 AnTCV. All rights reserved.</p>
+    </footer>
+</body>
+</html>
