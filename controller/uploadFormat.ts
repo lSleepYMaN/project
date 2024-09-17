@@ -14,6 +14,7 @@ import Jimp from 'jimp';
 import sharp from 'sharp'
 import fileType from 'file-type';
 import sharpBmp from 'sharp-bmp'
+const StreamZip = require('node-stream-zip');
 
 export const YOLO_detection = async (req: Request, res: Response) => {
     try {
@@ -36,9 +37,13 @@ export const YOLO_detection = async (req: Request, res: Response) => {
         if (!fs.existsSync(projectPath)) {
             fs.mkdirSync(projectPath, { recursive: true });
         }
-        
-        const zip = new AdmZip(file?.path!);
-        zip.extractAllTo(projectPath, true);
+
+        // const zip = new AdmZip(file?.path!);
+        // zip.extractAllTo(projectPath, true);
+
+        const zip = new StreamZip.async({ file: file?.path! });
+        await zip.extract(null, projectPath);
+        await zip.close();
 
         fs.unlinkSync(file?.path!)
 
@@ -57,8 +62,14 @@ export const YOLO_detection = async (req: Request, res: Response) => {
         for (const imageFile of imageFiles) {
             const newFilePath = path.join(storagePath, imageFile);
             let thumbsPath = path.join(__dirname, '../project_path', idproject.toString(), 'thumbs', imageFile)
-            fs.copyFileSync(path.join(imagesDir, imageFile), newFilePath);
-            sharp(newFilePath).resize(200,200).toFile(thumbsPath)
+            try {
+                fs.copyFileSync(path.join(imagesDir, imageFile), newFilePath);
+            } catch (err) {
+                console.warn('can not extract ' + newFilePath);
+                continue;
+            }
+
+            sharp(newFilePath).resize(200, 200).toFile(thumbsPath)
 
             await detectionModel.createDetection(imageFile, idproject)
             await segmentationModel.createSegmentation(imageFile, idproject)
@@ -90,28 +101,35 @@ export const YOLO_detection = async (req: Request, res: Response) => {
 
         for (const labelFile of labelFiles) {
             const filePath = path.join(labelsDir, labelFile);
-            const content = fs.readFileSync(filePath, 'utf-8');
+            let content;
+            try {
+                content = fs.readFileSync(filePath, 'utf-8');
+            } catch (err) {
+                console.warn(err + ' ' + filePath);
+                continue;
+            }
+
             const lines = content.split('\n');
             for (const line of lines) {
                 if (line.trim()) {
                     const [classId, x_center, y_center, width, height] = line.split(' ');
                     const baseName = path.basename(labelFile, '.txt');
-                let imageFileName = `${baseName}.jpg`;
+                    let imageFileName = `${baseName}.jpg`;
 
-                if (fs.existsSync(path.join(imagesDir, `${baseName}.png`))) {
-                    imageFileName = `${baseName}.png`;
-                }
-                const imgPath = path.join(imagesDir, imageFileName)
-                const metadata = await sharp(imgPath).metadata();
-                const image_width = metadata.width;
-                const image_height = metadata.height;
-                
+                    if (fs.existsSync(path.join(imagesDir, `${baseName}.png`))) {
+                        imageFileName = `${baseName}.png`;
+                    }
+                    const imgPath = path.join(imagesDir, imageFileName)
+                    const metadata = await sharp(imgPath).metadata();
+                    const image_width = metadata.width;
+                    const image_height = metadata.height;
+
                     detections.push({
-                        classId: await mapClassId.map_detection_import(parseInt(classId),labels,idproject),
-                        x1: ((parseFloat(x_center)*image_width!) - ((parseFloat(width)*image_width!)/2))/image_width!,
-                        y1: ((parseFloat(y_center)*image_height!) - ((parseFloat(height)*image_height!)/2))/image_height!,
-                        x2: ((parseFloat(x_center)*image_width!) + ((parseFloat(width)*image_width!)/2))/image_width!,
-                        y2: ((parseFloat(y_center)*image_height!) + ((parseFloat(height)*image_height!)/2))/image_height!,
+                        classId: await mapClassId.map_detection_import(parseInt(classId), labels, idproject),
+                        x1: ((parseFloat(x_center) * image_width!) - ((parseFloat(width) * image_width!) / 2)) / image_width!,
+                        y1: ((parseFloat(y_center) * image_height!) - ((parseFloat(height) * image_height!) / 2)) / image_height!,
+                        x2: ((parseFloat(x_center) * image_width!) + ((parseFloat(width) * image_width!) / 2)) / image_width!,
+                        y2: ((parseFloat(y_center) * image_height!) + ((parseFloat(height) * image_height!) / 2)) / image_height!,
                         user_id: user.id,
                         image_path: imageFileName,
                         idproject: idproject
@@ -123,28 +141,51 @@ export const YOLO_detection = async (req: Request, res: Response) => {
         if (fs.existsSync(projectPath)) {
             fs.readdirSync(imagesDir).forEach((file) => {
                 const filePath = path.join(imagesDir, file);
-                fs.unlinkSync(filePath);
+                try {
+                    fs.unlinkSync(filePath);
+                } catch (err) {
+                    console.warn(err + ' ' + filePath)
+                }
             })
             fs.readdirSync(labelsDir).forEach((file) => {
                 const filePath = path.join(labelsDir, file);
-                fs.unlinkSync(filePath);
+                try {
+                    fs.unlinkSync(filePath);
+                } catch (err) {
+                    console.warn(err + ' ' + filePath)
+                }
             })
-            fs.rmdirSync(imagesDir);
-            fs.rmdirSync(labelsDir);
+            try {
+                fs.rmdirSync(imagesDir);
+            } catch (err) {
+                console.warn(err + ' ' + imagesDir)
+            }
+            try {
+                fs.rmdirSync(labelsDir);
+            } catch (err) {
+                console.warn(err + ' ' + labelsDir)
+            }
             fs.readdirSync(projectPath).forEach((file) => {
                 const filePath = path.join(projectPath, file);
-                fs.unlinkSync(filePath);
+                try {
+                    fs.unlinkSync(filePath);
+                } catch (err) {
+                    console.warn(err + ' ' + filePath)
+                }
             })
-            fs.rmdirSync(projectPath);
+            try {
+                fs.rmdirSync(projectPath);
+            } catch (err) {
+                console.warn(err + ' ' + projectPath)
+            }
         }
-
         const save_bbox = await detectionModel.create_import_Bounding_box(detections, user.id, idproject)
 
         return res.status(200).json({
             type: 'success',
             message: 'import bbox success',
         })
-        
+
     } catch (error) {
         console.error('error:', error);
         return res.status(400).json({ error: 'upload YOLO detection ERROR!!' })
@@ -172,9 +213,13 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
         if (!fs.existsSync(projectPath)) {
             fs.mkdirSync(projectPath, { recursive: true });
         }
-        
-        const zip = new AdmZip(file?.path!);
-        zip.extractAllTo(projectPath, true);
+
+        //const zip = new AdmZip(file?.path!);
+        //zip.extractAllTo(projectPath, true);
+
+        const zip = new StreamZip.async({ file: file?.path! });
+        await zip.extract(null, projectPath);
+        await zip.close();
 
         fs.unlinkSync(file?.path!)
 
@@ -190,14 +235,19 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
         const imageFiles = fs.readdirSync(imagesDir);
         const storagePath = path.join(__dirname, '../project_path', idproject.toString(), 'images');
         let thumbsPath = path.join(__dirname, '../project_path', idproject.toString(), 'thumbs')
-    
+
 
         for (const imageFile of imageFiles) {
             const newFilePath = path.join(storagePath, imageFile);
-            console.log("newFilePath : ", newFilePath)
+            // console.log("newFilePath : ", newFilePath)
             let thumbsPath = path.join(__dirname, '../project_path', idproject.toString(), 'thumbs', imageFile)
-            fs.copyFileSync(path.join(imagesDir, imageFile), newFilePath);
-            sharp(newFilePath).resize(200,200).toFile(thumbsPath)
+            try {
+                fs.copyFileSync(path.join(imagesDir, imageFile), newFilePath);
+            } catch (err) {
+                console.warn('can not extract ' + newFilePath);
+                continue;
+            }
+            sharp(newFilePath).resize(200, 200).toFile(thumbsPath)
 
             await segmentationModel.createSegmentation(imageFile, idproject)
             await detectionModel.createDetection(imageFile, idproject)
@@ -225,11 +275,20 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
             await segmentationModel.createClass(label.label, idproject);
             await detectionModel.createClass(label.label, idproject)
         }
-        const labelFiles = fs.readdirSync(labelsDir);
+        const AlllabelFiles = fs.readdirSync(labelsDir);
+        const labelFiles = AlllabelFiles.filter(file => path.extname(file) === '.txt');
 
         for (const labelFile of labelFiles) {
+
             const filePath = path.join(labelsDir, labelFile);
-            const content = fs.readFileSync(filePath, 'utf-8');
+            let content;
+            try {
+                content = fs.readFileSync(filePath, 'utf-8');
+            } catch (err) {
+                console.warn(err + ' ' + filePath);
+                continue;
+            }
+
             const lines = content.split('\n');
             for (const line of lines) {
                 if (line.trim()) {
@@ -246,39 +305,39 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
                     const yMax = Math.max(...yCoords);
                     console.log('ClassID : ', classId)
                     const polygons: string[] = []
-                    for(let i = 0; i < values.length; i+=2){
-                        const polygon = `${values[i]},${values[i+1]}`
+                    for (let i = 0; i < values.length; i += 2) {
+                        const polygon = `${values[i]},${values[i + 1]}`
                         polygons.push(polygon)
                     }
                     const xy_polygon = polygons.join(' ')
                     const baseName = path.basename(labelFile, '.txt');
-                
+
                     let imageFileName = `${baseName}.jpg`;
 
                     if (fs.existsSync(path.join(imagesDir, `${baseName}.png`))) {
-                    imageFileName = `${baseName}.png`;
+                        imageFileName = `${baseName}.png`;
                     }
                     const imgPath = path.join(imagesDir, imageFileName)
                     const metadata = await sharp(imgPath).metadata();
-                    console.log(labels)
-                        segmentations.push({
-                            classId: await mapClassId.map_segmentation_import(classId,labels,idproject),
-                            xy_polygon: xy_polygon,
-                            user_id: user.id,
-                            image_path: imageFileName,
-                            idproject: idproject
-                        });
+                    // console.log(labels)
+                    segmentations.push({
+                        classId: await mapClassId.map_segmentation_import(classId, labels, idproject),
+                        xy_polygon: xy_polygon,
+                        user_id: user.id,
+                        image_path: imageFileName,
+                        idproject: idproject
+                    });
 
-                        detections.push({
-                            classId: await mapClassId.map_detection_import(parseInt(classId),labels,idproject),
-                            x1: xMin,
-                            y1: yMin,
-                            x2: xMax,
-                            y2: yMax,
-                            user_id: user.id,
-                            image_path: imageFileName,
-                            idproject: idproject
-                        });
+                    detections.push({
+                        classId: await mapClassId.map_detection_import(parseInt(classId), labels, idproject),
+                        x1: xMin,
+                        y1: yMin,
+                        x2: xMax,
+                        y2: yMax,
+                        user_id: user.id,
+                        image_path: imageFileName,
+                        idproject: idproject
+                    });
                 }
             }
         }
@@ -287,29 +346,53 @@ export const YOLO_segmentation = async (req: Request, res: Response) => {
         if (fs.existsSync(projectPath)) {
             fs.readdirSync(imagesDir).forEach((file) => {
                 const filePath = path.join(imagesDir, file);
-                fs.unlinkSync(filePath);
+                try {
+                    fs.unlinkSync(filePath);
+                } catch (err) {
+                    console.warn(err + ' ' + filePath)
+                }
             })
             fs.readdirSync(labelsDir).forEach((file) => {
                 const filePath = path.join(labelsDir, file);
-                fs.unlinkSync(filePath);
+                try {
+                    fs.unlinkSync(filePath);
+                } catch (err) {
+                    console.warn(err + ' ' + filePath)
+                }
             })
-            fs.rmdirSync(imagesDir);
-            fs.rmdirSync(labelsDir);
+            try {
+                fs.rmdirSync(imagesDir);
+            } catch (err) {
+                console.warn(err + ' ' + imagesDir)
+            }
+            try {
+                fs.rmdirSync(labelsDir);
+            } catch (err) {
+                console.warn(err + ' ' + labelsDir)
+            }
             fs.readdirSync(projectPath).forEach((file) => {
                 const filePath = path.join(projectPath, file);
-                fs.unlinkSync(filePath);
+                try {
+                    fs.unlinkSync(filePath);
+                } catch (err) {
+                    console.warn(err + ' ' + filePath)
+                }
             })
-            fs.rmdirSync(projectPath);
+            try {
+                fs.rmdirSync(projectPath);
+            } catch (err) {
+                console.warn(err + ' ' + projectPath)
+            }
         }
         const save_polygon = await segmentationModel.create_import_Polygon(segmentations, user.id, idproject)
         const save_bbox = await detectionModel.create_import_Bounding_box(detections, user.id, idproject)
-        
+
         return res.status(200).json({
             type: 'success',
             message: 'import polygon success',
         })
 
-        
+
     } catch (error) {
         console.error('error:', error);
         return res.status(400).json({ error: 'upload YOLO segmentation ERROR!!' })
